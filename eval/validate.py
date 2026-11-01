@@ -1,10 +1,12 @@
 """Check corpus integrity and ground-truth locations; does not evaluate an AI model."""
 import hashlib
 import json
+import unicodedata
 from collections import Counter
 from pathlib import Path
 from xml.etree import ElementTree
 from zipfile import ZipFile
+from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parent
 
@@ -13,6 +15,9 @@ def validate():
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
     documents = {item["id"]: item for item in manifest["documents"]}
+    assert manifest["language"] == "vi" and manifest["corpusVersion"] == "synthetic-vi-v2"
+    font = manifest["pdfFont"]
+    assert hashlib.sha256((ROOT / font["path"]).read_bytes()).hexdigest() == font["sha256"]
     assert len(documents) == len(manifest["documents"]) == 20
     assert Counter(item["format"] for item in documents.values()) == {"pdf": 8, "docx": 6, "txt": 6}
     assert len(questions) == len({item["id"] for item in questions}) == 25
@@ -25,6 +30,8 @@ def validate():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == document["sha256"], path
         paragraphs = json.loads((ROOT / document["canonicalPath"]).read_text(encoding="utf-8"))["paragraphs"]
         assert len(paragraphs) == 5
+        assert document["language"] == "vi"
+        assert all(unicodedata.normalize("NFC", text) == text and "Sổ tay" in text for text in paragraphs)
         canonical[fixture_id] = paragraphs
         if document["format"] == "docx":
             with ZipFile(path) as archive:
@@ -36,8 +43,14 @@ def validate():
         elif document["format"] == "txt":
             assert path.read_text(encoding="utf-8").strip().split("\n\n") == paragraphs
         else:
-            pdf = path.read_bytes()
-            assert pdf.startswith(b"%PDF-1.4") and pdf.count(b"/Type /Page ") == 5
+            pdf = PdfReader(path, strict=True)
+            assert len(pdf.pages) == 5
+            for page, expected in zip(pdf.pages, paragraphs):
+                extracted = unicodedata.normalize("NFC", page.extract_text())
+                assert " ".join(extracted.split()) == " ".join(expected.split()), document["id"]
+                fonts = [entry.get_object() for entry in page["/Resources"]["/Font"].values()]
+                assert any(entry.get("/ToUnicode") and entry.get("/FontDescriptor")
+                           and "/FontFile2" in entry["/FontDescriptor"] for entry in fonts)
     for question in questions:
         assert question["documentFixtureIds"] and set(question["documentFixtureIds"]) <= documents.keys()
         assert bool(question["expectedSources"]) == question["answerable"]

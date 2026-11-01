@@ -9,29 +9,29 @@
     "history": [
       {
         "role": "USER",
-        "content": "Handbook 01 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 01 có hai điều kiện hoàn tiền nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Refund condition one: notify the service desk within 8 calendar days after purchase. Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
+        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
         "sourceRefs": [
           {
             "fixtureId": "handbook-01",
             "pageNumber": 2,
             "paragraphIndex": null,
             "canonicalSection": 2,
-            "quote": "Refund condition one: notify the service desk within 8 calendar days after purchase.",
-            "startOffset": 24,
-            "endOffset": 108
+            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "startOffset": 18,
+            "endOffset": 143
           },
           {
             "fixtureId": "handbook-01",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
-            "startOffset": 24,
-            "endOffset": 145
+            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
+            "startOffset": 18,
+            "endOffset": 172
           }
         ]
       }
@@ -44,9 +44,9 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -60,29 +60,29 @@
     "history": [
       {
         "role": "USER",
-        "content": "Handbook 02 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 02 có hai điều kiện hoàn tiền nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Refund condition one: notify the service desk within 9 calendar days after purchase. Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
+        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 9 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
         "sourceRefs": [
           {
             "fixtureId": "handbook-02",
             "pageNumber": 2,
             "paragraphIndex": null,
             "canonicalSection": 2,
-            "quote": "Refund condition one: notify the service desk within 9 calendar days after purchase.",
-            "startOffset": 24,
-            "endOffset": 108
+            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 9 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "startOffset": 18,
+            "endOffset": 143
           },
           {
             "fixtureId": "handbook-02",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
-            "startOffset": 24,
-            "endOffset": 145
+            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
+            "startOffset": 18,
+            "endOffset": 172
           }
         ]
       }
@@ -95,9 +95,9 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -111,29 +111,29 @@
     "history": [
       {
         "role": "USER",
-        "content": "Handbook 03 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 03 có hai điều kiện hoàn tiền nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Refund condition one: notify the service desk within 10 calendar days after purchase. Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
+        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 10 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
         "sourceRefs": [
           {
             "fixtureId": "handbook-03",
             "pageNumber": 2,
             "paragraphIndex": null,
             "canonicalSection": 2,
-            "quote": "Refund condition one: notify the service desk within 10 calendar days after purchase.",
-            "startOffset": 24,
-            "endOffset": 109
+            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 10 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "startOffset": 18,
+            "endOffset": 144
           },
           {
             "fixtureId": "handbook-03",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
-            "startOffset": 24,
-            "endOffset": 145
+            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
+            "startOffset": 18,
+            "endOffset": 172
           }
         ]
       }
@@ -146,9 +146,9 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -162,29 +162,29 @@
     "history": [
       {
         "role": "USER",
-        "content": "Handbook 04 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 04 có hai điều kiện hoàn tiền nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Refund condition one: notify the service desk within 11 calendar days after purchase. Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
+        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 11 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
         "sourceRefs": [
           {
             "fixtureId": "handbook-04",
             "pageNumber": 2,
             "paragraphIndex": null,
             "canonicalSection": 2,
-            "quote": "Refund condition one: notify the service desk within 11 calendar days after purchase.",
-            "startOffset": 24,
-            "endOffset": 109
+            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 11 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "startOffset": 18,
+            "endOffset": 144
           },
           {
             "fixtureId": "handbook-04",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
-            "startOffset": 24,
-            "endOffset": 145
+            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
+            "startOffset": 18,
+            "endOffset": 172
           }
         ]
       }
@@ -197,9 +197,9 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -213,29 +213,29 @@
     "history": [
       {
         "role": "USER",
-        "content": "Handbook 05 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 05 có hai điều kiện hoàn tiền nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Refund condition one: notify the service desk within 12 calendar days after purchase. Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
+        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 12 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
         "sourceRefs": [
           {
             "fixtureId": "handbook-05",
             "pageNumber": 2,
             "paragraphIndex": null,
             "canonicalSection": 2,
-            "quote": "Refund condition one: notify the service desk within 12 calendar days after purchase.",
-            "startOffset": 24,
-            "endOffset": 109
+            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 12 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "startOffset": 18,
+            "endOffset": 144
           },
           {
             "fixtureId": "handbook-05",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
-            "startOffset": 24,
-            "endOffset": 145
+            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
+            "startOffset": 18,
+            "endOffset": 172
           }
         ]
       }
@@ -248,9 +248,9 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -260,7 +260,7 @@
     "documentFixtureIds": [
       "handbook-06"
     ],
-    "question": "Theo Handbook 06, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 06, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "Thông báo trong 13 ngày và nộp hồ sơ đầy đủ trong 20 ngày kể từ khi mua.",
@@ -270,18 +270,18 @@
         "pageNumber": 2,
         "paragraphIndex": null,
         "canonicalSection": 2,
-        "quote": "Refund condition one: notify the service desk within 13 calendar days after purchase.",
-        "startOffset": 24,
-        "endOffset": 109
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 13 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 144
       },
       {
         "fixtureId": "handbook-06",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 20 calendar days after purchase. The reimbursement cap is USD 250.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 20 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 250 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -291,7 +291,7 @@
     "documentFixtureIds": [
       "handbook-07"
     ],
-    "question": "Theo Handbook 07, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 07, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "Thông báo trong 14 ngày và nộp hồ sơ đầy đủ trong 21 ngày kể từ khi mua.",
@@ -301,18 +301,18 @@
         "pageNumber": 2,
         "paragraphIndex": null,
         "canonicalSection": 2,
-        "quote": "Refund condition one: notify the service desk within 14 calendar days after purchase.",
-        "startOffset": 24,
-        "endOffset": 109
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 14 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 144
       },
       {
         "fixtureId": "handbook-07",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 21 calendar days after purchase. The reimbursement cap is USD 275.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 21 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 275 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -322,7 +322,7 @@
     "documentFixtureIds": [
       "handbook-08"
     ],
-    "question": "Theo Handbook 08, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 08, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "Thông báo trong 15 ngày và nộp hồ sơ đầy đủ trong 22 ngày kể từ khi mua.",
@@ -332,18 +332,18 @@
         "pageNumber": 2,
         "paragraphIndex": null,
         "canonicalSection": 2,
-        "quote": "Refund condition one: notify the service desk within 15 calendar days after purchase.",
-        "startOffset": 24,
-        "endOffset": 109
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 144
       },
       {
         "fixtureId": "handbook-08",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 22 calendar days after purchase. The reimbursement cap is USD 300.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 22 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 300 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -353,7 +353,7 @@
     "documentFixtureIds": [
       "handbook-09"
     ],
-    "question": "Theo Handbook 09, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 09, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "Thông báo trong 16 ngày và nộp hồ sơ đầy đủ trong 23 ngày kể từ khi mua.",
@@ -363,18 +363,18 @@
         "pageNumber": null,
         "paragraphIndex": 2,
         "canonicalSection": 2,
-        "quote": "Refund condition one: notify the service desk within 16 calendar days after purchase.",
-        "startOffset": 24,
-        "endOffset": 109
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 144
       },
       {
         "fixtureId": "handbook-09",
         "pageNumber": null,
         "paragraphIndex": 3,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 23 calendar days after purchase. The reimbursement cap is USD 325.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 23 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 325 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -384,7 +384,7 @@
     "documentFixtureIds": [
       "handbook-10"
     ],
-    "question": "Theo Handbook 10, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 10, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "Thông báo trong 17 ngày và nộp hồ sơ đầy đủ trong 24 ngày kể từ khi mua.",
@@ -394,18 +394,18 @@
         "pageNumber": null,
         "paragraphIndex": 2,
         "canonicalSection": 2,
-        "quote": "Refund condition one: notify the service desk within 17 calendar days after purchase.",
-        "startOffset": 24,
-        "endOffset": 109
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 144
       },
       {
         "fixtureId": "handbook-10",
         "pageNumber": null,
         "paragraphIndex": 3,
         "canonicalSection": 3,
-        "quote": "Refund condition two: submit the complete claim within 24 calendar days after purchase. The reimbursement cap is USD 350.",
-        "startOffset": 24,
-        "endOffset": 145
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 24 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 350 đô la Mỹ (USD).",
+        "startOffset": 18,
+        "endOffset": 172
       }
     ]
   },
@@ -415,7 +415,7 @@
     "documentFixtureIds": [
       "handbook-11"
     ],
-    "question": "Mã hồ sơ chính xác của Handbook 11 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Mã hồ sơ chính xác của Sổ tay 11 là gì? Giữ nguyên dấu và số 0 ở đầu.",
     "history": [],
     "answerable": true,
     "expectedAnswer": "REF-2026-011",
@@ -425,9 +425,9 @@
         "pageNumber": null,
         "paragraphIndex": 4,
         "canonicalSection": 4,
-        "quote": "The exact claim identifier is REF-2026-011. Quote this identifier on every claim form.",
-        "startOffset": 24,
-        "endOffset": 110
+        "quote": "Mã hồ sơ chính xác là REF-2026-011. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "startOffset": 18,
+        "endOffset": 111
       }
     ]
   },
@@ -437,7 +437,7 @@
     "documentFixtureIds": [
       "handbook-12"
     ],
-    "question": "Mã hồ sơ chính xác của Handbook 12 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Mã hồ sơ chính xác của Sổ tay 12 là gì? Giữ nguyên dấu và số 0 ở đầu.",
     "history": [],
     "answerable": true,
     "expectedAnswer": "REF-2026-012",
@@ -447,9 +447,9 @@
         "pageNumber": null,
         "paragraphIndex": 4,
         "canonicalSection": 4,
-        "quote": "The exact claim identifier is REF-2026-012. Quote this identifier on every claim form.",
-        "startOffset": 24,
-        "endOffset": 110
+        "quote": "Mã hồ sơ chính xác là REF-2026-012. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "startOffset": 18,
+        "endOffset": 111
       }
     ]
   },
@@ -459,7 +459,7 @@
     "documentFixtureIds": [
       "handbook-13"
     ],
-    "question": "Mã hồ sơ chính xác của Handbook 13 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Mã hồ sơ chính xác của Sổ tay 13 là gì? Giữ nguyên dấu và số 0 ở đầu.",
     "history": [],
     "answerable": true,
     "expectedAnswer": "REF-2026-013",
@@ -469,9 +469,9 @@
         "pageNumber": null,
         "paragraphIndex": 4,
         "canonicalSection": 4,
-        "quote": "The exact claim identifier is REF-2026-013. Quote this identifier on every claim form.",
-        "startOffset": 24,
-        "endOffset": 110
+        "quote": "Mã hồ sơ chính xác là REF-2026-013. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "startOffset": 18,
+        "endOffset": 111
       }
     ]
   },
@@ -481,7 +481,7 @@
     "documentFixtureIds": [
       "handbook-14"
     ],
-    "question": "Theo Handbook 14, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 14, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "44 ngày sau khi đóng hồ sơ.",
@@ -491,9 +491,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 44 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 44 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -503,7 +503,7 @@
     "documentFixtureIds": [
       "handbook-15"
     ],
-    "question": "Theo Handbook 15, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 15, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "45 ngày sau khi đóng hồ sơ.",
@@ -513,9 +513,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 45 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 45 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -525,7 +525,7 @@
     "documentFixtureIds": [
       "handbook-16"
     ],
-    "question": "Theo Handbook 16, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 16, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "46 ngày sau khi đóng hồ sơ.",
@@ -535,9 +535,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 46 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 46 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -547,7 +547,7 @@
     "documentFixtureIds": [
       "handbook-17"
     ],
-    "question": "Theo Handbook 17, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 17, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "47 ngày sau khi đóng hồ sơ.",
@@ -557,9 +557,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 47 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 47 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -569,7 +569,7 @@
     "documentFixtureIds": [
       "handbook-18"
     ],
-    "question": "Theo Handbook 18, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 18, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "48 ngày sau khi đóng hồ sơ.",
@@ -579,9 +579,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 48 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 48 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -591,7 +591,7 @@
     "documentFixtureIds": [
       "handbook-19"
     ],
-    "question": "Theo Handbook 19, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 19, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "49 ngày sau khi đóng hồ sơ.",
@@ -601,9 +601,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 49 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 49 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },
@@ -613,7 +613,7 @@
     "documentFixtureIds": [
       "handbook-20"
     ],
-    "question": "Theo Handbook 20, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 20, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
     "expectedAnswer": "50 ngày sau khi đóng hồ sơ.",
@@ -623,9 +623,9 @@
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Supporting records must be retained for 50 calendar days after case closure.",
-        "startOffset": 24,
-        "endOffset": 100
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 50 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "startOffset": 18,
+        "endOffset": 121
       }
     ]
   },

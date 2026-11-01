@@ -1,209 +1,234 @@
 {
-  "corpusVersion": "synthetic-v1",
+  "corpusVersion": "synthetic-vi-v2",
+  "language": "vi",
   "reviewStatus": "PENDING_REVIEW",
   "reviewOwner": "Tuan Anh",
   "reviewedAt": null,
+  "pdfFont": {
+    "path": "assets/fonts/NotoSans-Regular.ttf",
+    "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5"
+  },
   "pipelineVersion": "UNSET_UNTIL_PHASE_6",
   "documents": [
     {
       "id": "handbook-01",
       "path": "fixtures/handbook-01.pdf",
       "format": "pdf",
-      "sha256": "00199dd5d547c44fd05e08185d889ab3a0f13a0c0a05a2c1f1184b2d769581eb",
+      "sha256": "d9acde38f7da2cee59ed3ed8ac1c9becec64db3dacb7c9a9e52c7d0ac54d4963",
       "canonicalPath": "canonical/handbook-01.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-02",
       "path": "fixtures/handbook-02.pdf",
       "format": "pdf",
-      "sha256": "099cf557fa3ffc0c8beee066ca29991f008205933d971a8858c219a0ba5733b0",
+      "sha256": "c6cc97774472d7a73a62c6c3447c6d3c6cd9c913d389e8d95ec8a5f09401febd",
       "canonicalPath": "canonical/handbook-02.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-03",
       "path": "fixtures/handbook-03.pdf",
       "format": "pdf",
-      "sha256": "8eeb993bc14fd4b53dbb044392e22792fcf56a0ec1dd8734d4e4e63197131b53",
+      "sha256": "135324ceb58aab0f719c106aeea2ea26fa48479be2841fee5692601e75e3d43c",
       "canonicalPath": "canonical/handbook-03.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-04",
       "path": "fixtures/handbook-04.pdf",
       "format": "pdf",
-      "sha256": "92928dd04c94fa964fa03fe780892f45ccc39092fc5d052769d4f2bbb7edfb2d",
+      "sha256": "ea4fe674ac95b49cfccbca5c974c459c671c49086c9f5005627e4e84baf223b9",
       "canonicalPath": "canonical/handbook-04.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-05",
       "path": "fixtures/handbook-05.pdf",
       "format": "pdf",
-      "sha256": "10851b04760b7fd35517b344bd07a265ec2792d3270f72809f88e4c8ed242248",
+      "sha256": "ef1cce432e6495dd32de0429b54b760f11cca0f24de6fe62adaab3a44e866c98",
       "canonicalPath": "canonical/handbook-05.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-06",
       "path": "fixtures/handbook-06.pdf",
       "format": "pdf",
-      "sha256": "7c5365a8a02da56fca07961420a5af75ad41b73f8c9da92cd8e79cad5e009512",
+      "sha256": "9dba8231596dbac0199ae07bac204ec90481d940f3404dd076a07540ca2bc212",
       "canonicalPath": "canonical/handbook-06.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-07",
       "path": "fixtures/handbook-07.pdf",
       "format": "pdf",
-      "sha256": "02d7ca4e30365e9ca3400971ea7d90da170fae032cbefb4999dd0401a1b2d002",
+      "sha256": "a6acadad11f156e49fef7ff331bfe3e206400c3b16709f76611e6fcf005a8778",
       "canonicalPath": "canonical/handbook-07.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-08",
       "path": "fixtures/handbook-08.pdf",
       "format": "pdf",
-      "sha256": "0fb437b9f5c79e148c7de6d8770c89a579385a2b56eb40d9f71dcebd1be0eae9",
+      "sha256": "dd2bc27d3d43b07187532fdd1aff10b632178759cb38cf0b7625bae25683e941",
       "canonicalPath": "canonical/handbook-08.json",
       "pageCount": 5,
       "paragraphCount": null,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-09",
       "path": "fixtures/handbook-09.docx",
       "format": "docx",
-      "sha256": "d0da49370be22df84cb84841a5eb3f8b4978304929852874cdc936d1b62ca402",
+      "sha256": "24fb51ad4208ece83c9a0a9a94a221ebd2bf0f2bf098a5a68f5043633805378a",
       "canonicalPath": "canonical/handbook-09.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-10",
       "path": "fixtures/handbook-10.docx",
       "format": "docx",
-      "sha256": "90d7ec9a0eced2f781fad6b4abc342277d4898910c2db357e17951c548905b1f",
+      "sha256": "4264b66835bbce5d82cab7fce16fb0f5fd76c7f17025131df5069d6d9de5ed93",
       "canonicalPath": "canonical/handbook-10.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-11",
       "path": "fixtures/handbook-11.docx",
       "format": "docx",
-      "sha256": "916f2247acbacd452ef711c35e79b3ea37dff2e5f28846d42a87dd7eb2646279",
+      "sha256": "550ead50c80b6cffbdfa1a99125dc9f30221a75a50aab4f3aa58e8426f9d0f1a",
       "canonicalPath": "canonical/handbook-11.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-12",
       "path": "fixtures/handbook-12.docx",
       "format": "docx",
-      "sha256": "15ace7fefdcd8e079a671142989083d4098681078c48952c5b8aaf6e89c73b02",
+      "sha256": "3fe4b1405aabed93c3e18026cc977fbd4f3d468a65fe2708188709d499d7f31c",
       "canonicalPath": "canonical/handbook-12.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-13",
       "path": "fixtures/handbook-13.docx",
       "format": "docx",
-      "sha256": "b2e059738971c7156d4d31b99487205e490f1763012adefec8f74bf124262a44",
+      "sha256": "cf199697a17aa2c00074223bbadc46b9e9d8863b8908af30e7bbabd5fa24a01f",
       "canonicalPath": "canonical/handbook-13.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-14",
       "path": "fixtures/handbook-14.docx",
       "format": "docx",
-      "sha256": "37423d626fc2698b3c5b7ce49feb54ce4cf5a54cf3ea208ce94ee97fc5152bad",
+      "sha256": "1e5e2262577bd5c07d6da1772445264ac41ffd920b82076010895518d1ca9ae6",
       "canonicalPath": "canonical/handbook-14.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-15",
       "path": "fixtures/handbook-15.txt",
       "format": "txt",
-      "sha256": "69e0ff1ecf7cd55576e6b1a0ce5c9ccdb5844567c79af98c76983fd0b2844798",
+      "sha256": "6a41d0e4b592da52d124dd012118794b97c95e152dd87f0ffa0aeaa2fed6a410",
       "canonicalPath": "canonical/handbook-15.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-16",
       "path": "fixtures/handbook-16.txt",
       "format": "txt",
-      "sha256": "f3f3d3c643f16fc827aa26dbdf5982f563755ef1e95e924f7f9684208fcf910c",
+      "sha256": "e5b847f127e27d4d65f681562c44c9ba8079bfaf45d92938dfe34b0fc90a77b3",
       "canonicalPath": "canonical/handbook-16.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-17",
       "path": "fixtures/handbook-17.txt",
       "format": "txt",
-      "sha256": "974407a5e37075de6a96a826558bcaeb5b0c73a4313dfb4224fbd61400ef0b2f",
+      "sha256": "d0f2b04e43afc03b7acd3f07d38a03adfd2f712d26e5d12dbddc12f372cba321",
       "canonicalPath": "canonical/handbook-17.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-18",
       "path": "fixtures/handbook-18.txt",
       "format": "txt",
-      "sha256": "1ae1e92629ddbbc26dc0d0cb4bf7df7efb1d5965a3404ce2b3e8fc5badab16d9",
+      "sha256": "2b50f120fec054bbd6e4cd38b5a37c61eb096567be3ae7acf5715826bb074651",
       "canonicalPath": "canonical/handbook-18.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-19",
       "path": "fixtures/handbook-19.txt",
       "format": "txt",
-      "sha256": "130c817227d0a9e5cb4081595d122ddf5580c057ab60610dbd0b2bf97f1e9363",
+      "sha256": "abaa0ff6dd84f7c31ac02681fa6d8d8956aca7b84d2a0936ab387a996c7e01ca",
       "canonicalPath": "canonical/handbook-19.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     },
     {
       "id": "handbook-20",
       "path": "fixtures/handbook-20.txt",
       "format": "txt",
-      "sha256": "6e6e6d5aea036aa68ce75e4f4b8d17d0c3acfddd930d167bd6a0f056d034bae1",
+      "sha256": "bcf1b4fc9d8493d3a0915b4c060efb168f6dbea453935db8258eb9e4246c50f8",
       "canonicalPath": "canonical/handbook-20.json",
       "pageCount": null,
       "paragraphCount": 5,
-      "fixtureVersion": "synthetic-v1"
+      "fixtureVersion": "synthetic-vi-v2",
+      "language": "vi"
     }
   ]
 }

@@ -3,5 +3,6 @@
 *.sh text eol=lf
 *.pdf binary
 *.docx binary
+*.ttf binary
 *.json text eol=lf
 eval/fixtures/*.txt text eol=lf

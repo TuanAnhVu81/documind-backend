@@ -81,6 +81,7 @@ Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự đ�
 
 ```powershell
 .\mvnw.cmd -B -ntp verify
+python -m pip install -r eval/requirements.txt
 python eval/validate.py
 ```
 
@@ -108,7 +109,7 @@ DB mới dùng pgvector 0.8.7/PostgreSQL 15, port loopback 5433 mặc định, p
 
 ## Eval và quyết định còn lại
 
-`eval/README.md` mô tả bộ 20 file/25 câu hỏi tổng hợp, ground truth và rubric. Dữ liệu hiện **PENDING_REVIEW**, cần Tuấn Anh duyệt trước tuần 2. Phase 1 chưa chạy RAG/model thật và không có số liệu chất lượng được tuyên bố đạt.
+`eval/README.md` mô tả bộ 20 file/25 câu hỏi tổng hợp tiếng Việt (`synthetic-vi-v2`), ground truth và rubric; PDF nhúng font Noto Sans để giữ dấu khi hiển thị/trích xuất. Dữ liệu hiện **PENDING_REVIEW**, cần Tuấn Anh duyệt trước tuần 2. Phase 1 chưa chạy RAG/model thật và không có số liệu chất lượng được tuyên bố đạt.
 
 Quyết định chi tiết: `docs/decisions/0001-local-foundation.md`. Trước Phase 2 phải chốt provider/model/số chiều; trước triển khai VPS phải chốt domain/tài nguyên. Không đưa `.env`, file upload hoặc API key vào Git.
 
