@@ -2,268 +2,410 @@
   {
     "id": "q-01",
     "kind": "multi_turn",
+    "taskType": "notification_followup",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-01"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Vậy tổ đó phải thông báo yêu cầu hoàn tiền trong bao lâu, có tính ngày nghỉ không?",
     "history": [
       {
         "role": "USER",
-        "content": "Sổ tay 01 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 01 thuộc tổ dịch vụ nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
+        "content": "Sổ tay 01 thuộc Tổ dịch vụ 01.",
         "sourceRefs": [
           {
             "fixtureId": "handbook-01",
-            "pageNumber": 2,
+            "pageNumber": 1,
             "paragraphIndex": null,
-            "canonicalSection": 2,
-            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "canonicalSection": 1,
+            "quote": "Sổ tay 01 thuộc Tổ dịch vụ 01, có hiệu lực từ ngày 01/10/2026.",
             "startOffset": 18,
-            "endOffset": 143
-          },
-          {
-            "fixtureId": "handbook-01",
-            "pageNumber": 3,
-            "paragraphIndex": null,
-            "canonicalSection": 3,
-            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
-            "startOffset": 18,
-            "endOffset": 172
+            "endOffset": 80
           }
         ]
       }
     ],
     "answerable": true,
-    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 15 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Phải thông báo trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
     "expectedSources": [
       {
         "fixtureId": "handbook-01",
-        "pageNumber": 3,
+        "pageNumber": 2,
         "paragraphIndex": null,
-        "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 125 đô la Mỹ (USD).",
+        "canonicalSection": 2,
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 8 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
         "startOffset": 18,
-        "endOffset": 172
+        "endOffset": 143
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hạn thông báo là 8 ngày kể từ ngày mua, gồm ngày nghỉ và lễ.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "8 ngày kể từ ngày mua",
+          "tính cả ngày nghỉ và ngày lễ"
+        ],
+        "answerFragments": [
+          "8 ngày kể từ ngày mua",
+          "tính cả ngày nghỉ và ngày lễ"
+        ]
       }
     ]
   },
   {
     "id": "q-02",
     "kind": "multi_turn",
+    "taskType": "missing_document_followup",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-02"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Nếu thiếu một trong các thành phần đó thì hồ sơ được xử lý thế nào?",
     "history": [
       {
         "role": "USER",
-        "content": "Sổ tay 02 có hai điều kiện hoàn tiền nào?"
+        "content": "Hồ sơ đầy đủ theo Sổ tay 02 gồm những gì?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 9 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
+        "content": "Hồ sơ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
         "sourceRefs": [
-          {
-            "fixtureId": "handbook-02",
-            "pageNumber": 2,
-            "paragraphIndex": null,
-            "canonicalSection": 2,
-            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 9 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
-            "startOffset": 18,
-            "endOffset": 143
-          },
           {
             "fixtureId": "handbook-02",
             "pageNumber": 3,
             "paragraphIndex": null,
             "canonicalSection": 3,
-            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
-            "startOffset": 18,
-            "endOffset": 172
+            "quote": "Hồ sơ đầy đủ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
+            "startOffset": 182,
+            "endOffset": 275
           }
         ]
       }
     ],
     "answerable": true,
-    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 16 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Hồ sơ thiếu thành phần phải được trả lại để bổ sung trước khi xét duyệt.",
     "expectedSources": [
       {
         "fixtureId": "handbook-02",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 150 đô la Mỹ (USD).",
-        "startOffset": 18,
-        "endOffset": 172
+        "quote": "Hồ sơ thiếu thành phần phải được trả lại để bổ sung trước khi xét duyệt.",
+        "startOffset": 276,
+        "endOffset": 348
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hồ sơ thiếu phải trả lại để bổ sung trước xét duyệt.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "trả lại để bổ sung trước khi xét duyệt"
+        ],
+        "answerFragments": [
+          "trả lại để bổ sung trước khi xét duyệt"
+        ]
       }
     ]
   },
   {
     "id": "q-03",
     "kind": "multi_turn",
+    "taskType": "amount_followup",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-03"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Còn mức hoàn tiền tối đa cho hồ sơ đó là bao nhiêu?",
     "history": [
       {
         "role": "USER",
-        "content": "Sổ tay 03 có hai điều kiện hoàn tiền nào?"
+        "content": "Mã hồ sơ của Sổ tay 03 là gì?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 10 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
+        "content": "Mã hồ sơ là REF-2026-003.",
         "sourceRefs": [
           {
             "fixtureId": "handbook-03",
-            "pageNumber": 2,
+            "pageNumber": 4,
             "paragraphIndex": null,
-            "canonicalSection": 2,
-            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 10 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "canonicalSection": 4,
+            "quote": "Mã hồ sơ chính xác là REF-2026-003.",
             "startOffset": 18,
-            "endOffset": 144
-          },
-          {
-            "fixtureId": "handbook-03",
-            "pageNumber": 3,
-            "paragraphIndex": null,
-            "canonicalSection": 3,
-            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
-            "startOffset": 18,
-            "endOffset": 172
+            "endOffset": 53
           }
         ]
       }
     ],
     "answerable": true,
-    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 17 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
     "expectedSources": [
       {
         "fixtureId": "handbook-03",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
-        "startOffset": 18,
+        "quote": "Mức hoàn tiền tối đa là 175 đô la Mỹ (USD).",
+        "startOffset": 129,
         "endOffset": 172
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Mức trần hoàn tiền là 175 USD.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "175 đô la Mỹ (USD)"
+        ],
+        "answerFragments": [
+          "175 đô la Mỹ (USD)"
+        ]
       }
     ]
   },
   {
     "id": "q-04",
     "kind": "multi_turn",
+    "taskType": "identifier_followup",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-04"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Khi sao chép mã này, những chi tiết nào phải giữ nguyên?",
     "history": [
       {
         "role": "USER",
-        "content": "Sổ tay 04 có hai điều kiện hoàn tiền nào?"
+        "content": "Cho biết mã hồ sơ trong Sổ tay 04."
       },
       {
         "role": "ASSISTANT",
-        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 11 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
+        "content": "Mã hồ sơ là REF-2026-004.",
         "sourceRefs": [
           {
             "fixtureId": "handbook-04",
-            "pageNumber": 2,
+            "pageNumber": 4,
             "paragraphIndex": null,
-            "canonicalSection": 2,
-            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 11 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "canonicalSection": 4,
+            "quote": "Mã hồ sơ chính xác là REF-2026-004.",
             "startOffset": 18,
-            "endOffset": 144
-          },
-          {
-            "fixtureId": "handbook-04",
-            "pageNumber": 3,
-            "paragraphIndex": null,
-            "canonicalSection": 3,
-            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
-            "startOffset": 18,
-            "endOffset": 172
+            "endOffset": 53
           }
         ]
       }
     ],
     "answerable": true,
-    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 18 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Phải giữ nguyên dấu gạch nối và các chữ số 0 ở đầu mỗi phần của mã.",
     "expectedSources": [
       {
         "fixtureId": "handbook-04",
-        "pageNumber": 3,
+        "pageNumber": 4,
         "paragraphIndex": null,
-        "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 18 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
-        "startOffset": 18,
-        "endOffset": 172
+        "canonicalSection": 4,
+        "quote": "Khi sao chép phải giữ nguyên dấu gạch nối và các chữ số 0 ở đầu mỗi phần của mã.",
+        "startOffset": 202,
+        "endOffset": 282
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Giữ dấu gạch nối và chữ số 0 đầu mỗi phần.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "dấu gạch nối",
+          "các chữ số 0 ở đầu"
+        ],
+        "answerFragments": [
+          "dấu gạch nối",
+          "các chữ số 0 ở đầu"
+        ]
       }
     ]
   },
   {
     "id": "q-05",
     "kind": "multi_turn",
+    "taskType": "retention_followup",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-05"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Sau khi đóng hồ sơ của tổ đó, phải giữ chứng từ thêm bao nhiêu ngày?",
     "history": [
       {
         "role": "USER",
-        "content": "Sổ tay 05 có hai điều kiện hoàn tiền nào?"
+        "content": "Sổ tay 05 thuộc tổ nào?"
       },
       {
         "role": "ASSISTANT",
-        "content": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 12 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
+        "content": "Sổ tay 05 thuộc Tổ dịch vụ 05.",
         "sourceRefs": [
           {
             "fixtureId": "handbook-05",
-            "pageNumber": 2,
+            "pageNumber": 1,
             "paragraphIndex": null,
-            "canonicalSection": 2,
-            "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 12 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+            "canonicalSection": 1,
+            "quote": "Sổ tay 05 thuộc Tổ dịch vụ 05, có hiệu lực từ ngày 01/10/2026.",
             "startOffset": 18,
-            "endOffset": 144
-          },
-          {
-            "fixtureId": "handbook-05",
-            "pageNumber": 3,
-            "paragraphIndex": null,
-            "canonicalSection": 3,
-            "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
-            "startOffset": 18,
-            "endOffset": 172
+            "endOffset": 80
           }
         ]
       }
     ],
     "answerable": true,
-    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 19 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Phải lưu giữ chứng từ trong 35 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
     "expectedSources": [
       {
         "fixtureId": "handbook-05",
-        "pageNumber": 3,
+        "pageNumber": 5,
         "paragraphIndex": null,
-        "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 19 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 225 đô la Mỹ (USD).",
+        "canonicalSection": 5,
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 35 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
         "startOffset": 18,
-        "endOffset": 172
+        "endOffset": 121
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Lưu giữ 35 ngày kể từ ngày đóng hồ sơ.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "35 ngày kể từ ngày đóng hồ sơ"
+        ],
+        "answerFragments": [
+          "35 ngày kể từ ngày đóng hồ sơ"
+        ]
       }
     ]
   },
   {
     "id": "q-06",
-    "kind": "multi_source",
+    "kind": "multi_passage",
+    "taskType": "deadline_and_amount",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-06"
     ],
-    "question": "Theo Sổ tay 06, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 06, hãy nêu cả thời hạn thông báo yêu cầu và mức hoàn tiền tối đa.",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "Thông báo trong 13 ngày và nộp hồ sơ đầy đủ trong 20 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Phải thông báo trong vòng 13 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ; mức hoàn tiền tối đa là 250 đô la Mỹ (USD).",
     "expectedSources": [
       {
         "fixtureId": "handbook-06",
@@ -279,115 +421,254 @@
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 20 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 250 đô la Mỹ (USD).",
-        "startOffset": 18,
+        "quote": "Mức hoàn tiền tối đa là 250 đô la Mỹ (USD).",
+        "startOffset": 129,
         "endOffset": 172
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hạn thông báo 13 ngày kể từ ngày mua.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "13 ngày kể từ ngày mua"
+        ],
+        "answerFragments": [
+          "13 ngày kể từ ngày mua"
+        ]
+      },
+      {
+        "text": "Mức trần 250 USD.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "250 đô la Mỹ (USD)"
+        ],
+        "answerFragments": [
+          "250 đô la Mỹ (USD)"
+        ]
       }
     ]
   },
   {
     "id": "q-07",
-    "kind": "multi_source",
+    "kind": "multi_passage",
+    "taskType": "process_and_retention",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-07"
     ],
-    "question": "Theo Sổ tay 07, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Trong Sổ tay 07, hồ sơ thiếu giấy tờ được xử lý thế nào và chứng từ phải giữ bao lâu sau khi đóng hồ sơ?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "Thông báo trong 14 ngày và nộp hồ sơ đầy đủ trong 21 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Hồ sơ thiếu thành phần phải được trả lại để bổ sung trước khi xét duyệt. Chứng từ được lưu giữ trong 37 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
     "expectedSources": [
-      {
-        "fixtureId": "handbook-07",
-        "pageNumber": 2,
-        "paragraphIndex": null,
-        "canonicalSection": 2,
-        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 14 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 144
-      },
       {
         "fixtureId": "handbook-07",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 21 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 275 đô la Mỹ (USD).",
+        "quote": "Hồ sơ thiếu thành phần phải được trả lại để bổ sung trước khi xét duyệt.",
+        "startOffset": 276,
+        "endOffset": 348
+      },
+      {
+        "fixtureId": "handbook-07",
+        "pageNumber": 5,
+        "paragraphIndex": null,
+        "canonicalSection": 5,
+        "quote": "Chứng từ liên quan phải được lưu giữ trong 37 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
         "startOffset": 18,
-        "endOffset": 172
+        "endOffset": 121
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hồ sơ thiếu phải trả lại để bổ sung.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "trả lại để bổ sung trước khi xét duyệt"
+        ],
+        "answerFragments": [
+          "trả lại để bổ sung trước khi xét duyệt"
+        ]
+      },
+      {
+        "text": "Lưu giữ chứng từ 37 ngày sau đóng hồ sơ.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "37 ngày kể từ ngày đóng hồ sơ"
+        ],
+        "answerFragments": [
+          "37 ngày kể từ ngày đóng hồ sơ"
+        ]
       }
     ]
   },
   {
     "id": "q-08",
-    "kind": "multi_source",
+    "kind": "multi_passage",
+    "taskType": "scope_rule_and_deadline",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-08"
     ],
-    "question": "Theo Sổ tay 08, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Sổ tay 08 có cho lấy thời hạn của tổ khác để thay thế không? Hãy nêu thời hạn nộp hồ sơ đúng của sổ tay này.",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "Thông báo trong 15 ngày và nộp hồ sơ đầy đủ trong 22 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Không được lấy thời hạn của tổ khác để thay thế. Phải nộp hồ sơ đầy đủ trong vòng 22 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
     "expectedSources": [
       {
         "fixtureId": "handbook-08",
-        "pageNumber": 2,
+        "pageNumber": 1,
         "paragraphIndex": null,
-        "canonicalSection": 2,
-        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 15 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 144
+        "canonicalSection": 1,
+        "quote": "Mỗi tổ khác sử dụng sổ tay riêng; không được lấy thời hạn của tổ khác để thay thế quy định trong tài liệu này.",
+        "startOffset": 146,
+        "endOffset": 256
       },
       {
         "fixtureId": "handbook-08",
         "pageNumber": 3,
         "paragraphIndex": null,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 22 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 300 đô la Mỹ (USD).",
+        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 22 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
         "startOffset": 18,
-        "endOffset": 172
+        "endOffset": 128
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Không thay bằng thời hạn của tổ khác.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "không được lấy thời hạn của tổ khác để thay thế"
+        ],
+        "answerFragments": [
+          "Không được lấy thời hạn của tổ khác để thay thế"
+        ]
+      },
+      {
+        "text": "Hạn nộp hồ sơ 22 ngày kể từ ngày mua.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "22 ngày kể từ ngày mua"
+        ],
+        "answerFragments": [
+          "22 ngày kể từ ngày mua"
+        ]
       }
     ]
   },
   {
     "id": "q-09",
-    "kind": "multi_source",
+    "kind": "multi_passage",
+    "taskType": "three_fact_summary",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-09"
     ],
-    "question": "Theo Sổ tay 09, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Tóm tắt Sổ tay 09 theo ba mục: ngày hiệu lực, mã hồ sơ phải ghi trên đơn và mức hoàn tiền tối đa.",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "Thông báo trong 16 ngày và nộp hồ sơ đầy đủ trong 23 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Ngày hiệu lực: 01/10/2026. Mã hồ sơ phải ghi trên mọi đơn đề nghị hoàn tiền: REF-2026-009. Mức hoàn tiền tối đa: 325 đô la Mỹ (USD).",
     "expectedSources": [
       {
         "fixtureId": "handbook-09",
         "pageNumber": null,
-        "paragraphIndex": 2,
-        "canonicalSection": 2,
-        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 16 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
+        "paragraphIndex": 1,
+        "canonicalSection": 1,
+        "quote": "Sổ tay 09 thuộc Tổ dịch vụ 09, có hiệu lực từ ngày 01/10/2026.",
         "startOffset": 18,
-        "endOffset": 144
+        "endOffset": 80
+      },
+      {
+        "fixtureId": "handbook-09",
+        "pageNumber": null,
+        "paragraphIndex": 4,
+        "canonicalSection": 4,
+        "quote": "Mã hồ sơ chính xác là REF-2026-009. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "startOffset": 18,
+        "endOffset": 111
       },
       {
         "fixtureId": "handbook-09",
         "pageNumber": null,
         "paragraphIndex": 3,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 23 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 325 đô la Mỹ (USD).",
-        "startOffset": 18,
+        "quote": "Mức hoàn tiền tối đa là 325 đô la Mỹ (USD).",
+        "startOffset": 129,
         "endOffset": 172
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hiệu lực từ 01/10/2026.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "01/10/2026"
+        ],
+        "answerFragments": [
+          "01/10/2026"
+        ]
+      },
+      {
+        "text": "Mã REF-2026-009 phải ghi trên mọi đơn.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "REF-2026-009",
+          "trên mọi đơn đề nghị hoàn tiền"
+        ],
+        "answerFragments": [
+          "REF-2026-009",
+          "trên mọi đơn đề nghị hoàn tiền"
+        ]
+      },
+      {
+        "text": "Mức trần 325 USD.",
+        "sourceIndices": [
+          2
+        ],
+        "evidenceFragments": [
+          "325 đô la Mỹ (USD)"
+        ],
+        "answerFragments": [
+          "325 đô la Mỹ (USD)"
+        ]
       }
     ]
   },
   {
     "id": "q-10",
-    "kind": "multi_source",
+    "kind": "multi_passage",
+    "taskType": "deadline_and_checklist",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-10"
     ],
-    "question": "Theo Sổ tay 10, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "question": "Theo Sổ tay 10, cần thông báo trong thời hạn nào và một bộ hồ sơ đầy đủ phải gồm những gì?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "Thông báo trong 17 ngày và nộp hồ sơ đầy đủ trong 24 ngày kể từ khi mua.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Cần thông báo trong vòng 17 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Hồ sơ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
     "expectedSources": [
       {
         "fixtureId": "handbook-10",
@@ -403,22 +684,55 @@
         "pageNumber": null,
         "paragraphIndex": 3,
         "canonicalSection": 3,
-        "quote": "Điều kiện hoàn tiền thứ hai: nộp hồ sơ đầy đủ trong vòng 24 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ. Mức hoàn tiền tối đa là 350 đô la Mỹ (USD).",
-        "startOffset": 18,
-        "endOffset": 172
+        "quote": "Hồ sơ đầy đủ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
+        "startOffset": 182,
+        "endOffset": 275
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Hạn thông báo 17 ngày kể từ ngày mua.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "17 ngày kể từ ngày mua"
+        ],
+        "answerFragments": [
+          "17 ngày kể từ ngày mua"
+        ]
+      },
+      {
+        "text": "Hồ sơ có hóa đơn, giải trình và liên hệ.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "hóa đơn",
+          "bản giải trình bằng văn bản",
+          "thông tin liên hệ của người đề nghị"
+        ],
+        "answerFragments": [
+          "hóa đơn",
+          "bản giải trình bằng văn bản",
+          "thông tin liên hệ của người đề nghị"
+        ]
       }
     ]
   },
   {
     "id": "q-11",
     "kind": "exact_keyword",
+    "taskType": "identifier_usage",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-11"
     ],
-    "question": "Mã hồ sơ chính xác của Sổ tay 11 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Trong Sổ tay 11, mã REF-2026-011 phải được ghi ở đâu?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "REF-2026-011",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Mã REF-2026-011 phải được ghi trên mọi đơn đề nghị hoàn tiền.",
     "expectedSources": [
       {
         "fixtureId": "handbook-11",
@@ -429,17 +743,39 @@
         "startOffset": 18,
         "endOffset": 111
       }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Ghi REF-2026-011 trên mọi đơn đề nghị hoàn tiền.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "REF-2026-011",
+          "trên mọi đơn đề nghị hoàn tiền"
+        ],
+        "answerFragments": [
+          "REF-2026-011",
+          "trên mọi đơn đề nghị hoàn tiền"
+        ]
+      }
+    ],
+    "exactKeywords": [
+      "REF-2026-011"
     ]
   },
   {
     "id": "q-12",
     "kind": "exact_keyword",
+    "taskType": "exact_identifier",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-12"
     ],
-    "question": "Mã hồ sơ chính xác của Sổ tay 12 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Ghi lại mã hồ sơ đầy đủ của Sổ tay 12, giữ nguyên dấu gạch nối và các chữ số 0.",
     "history": [],
     "answerable": true,
+    "expectedOutcome": "ANSWER",
     "expectedAnswer": "REF-2026-012",
     "expectedSources": [
       {
@@ -447,176 +783,350 @@
         "pageNumber": null,
         "paragraphIndex": 4,
         "canonicalSection": 4,
-        "quote": "Mã hồ sơ chính xác là REF-2026-012. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "quote": "Mã hồ sơ chính xác là REF-2026-012.",
         "startOffset": 18,
-        "endOffset": 111
+        "endOffset": 53
       }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Mã hồ sơ là REF-2026-012.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "REF-2026-012"
+        ],
+        "answerFragments": [
+          "REF-2026-012"
+        ]
+      }
+    ],
+    "exactKeywords": [
+      "REF-2026-012"
     ]
   },
   {
     "id": "q-13",
     "kind": "exact_keyword",
+    "taskType": "format_correction",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-13"
     ],
-    "question": "Mã hồ sơ chính xác của Sổ tay 13 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "question": "Một người ghi REF2026013 vào đơn theo Sổ tay 13. Mã đó đã đúng định dạng chưa? Hãy sửa lại nếu cần.",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "REF-2026-013",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Chưa đúng: mã chính xác là REF-2026-013, cần giữ dấu gạch nối và các chữ số 0 ở đầu mỗi phần của mã.",
     "expectedSources": [
       {
         "fixtureId": "handbook-13",
         "pageNumber": null,
         "paragraphIndex": 4,
         "canonicalSection": 4,
-        "quote": "Mã hồ sơ chính xác là REF-2026-013. Người nộp phải ghi mã này trên mọi đơn đề nghị hoàn tiền.",
+        "quote": "Mã hồ sơ chính xác là REF-2026-013.",
         "startOffset": 18,
-        "endOffset": 111
+        "endOffset": 53
+      },
+      {
+        "fixtureId": "handbook-13",
+        "pageNumber": null,
+        "paragraphIndex": 4,
+        "canonicalSection": 4,
+        "quote": "Khi sao chép phải giữ nguyên dấu gạch nối và các chữ số 0 ở đầu mỗi phần của mã.",
+        "startOffset": 202,
+        "endOffset": 282
       }
-    ]
+    ],
+    "expectedClaims": [
+      {
+        "text": "Mã đúng là REF-2026-013.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "REF-2026-013"
+        ],
+        "answerFragments": [
+          "REF-2026-013"
+        ]
+      },
+      {
+        "text": "Phải giữ dấu gạch nối và chữ số 0.",
+        "sourceIndices": [
+          1
+        ],
+        "evidenceFragments": [
+          "dấu gạch nối",
+          "các chữ số 0 ở đầu"
+        ],
+        "answerFragments": [
+          "dấu gạch nối",
+          "các chữ số 0 ở đầu"
+        ]
+      }
+    ],
+    "exactKeywords": [
+      "REF-2026-013"
+    ],
+    "formatComparison": {
+      "provided": "REF2026013",
+      "expected": "REF-2026-013",
+      "matches": false
+    }
   },
   {
     "id": "q-14",
     "kind": "direct",
+    "taskType": "owner_and_effective_date",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-14"
     ],
-    "question": "Theo Sổ tay 14, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Sổ tay 14 thuộc tổ dịch vụ nào và có hiệu lực từ ngày nào?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "44 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Sổ tay 14 thuộc Tổ dịch vụ 14, có hiệu lực từ ngày 01/10/2026.",
     "expectedSources": [
       {
         "fixtureId": "handbook-14",
         "pageNumber": null,
-        "paragraphIndex": 5,
-        "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 44 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "paragraphIndex": 1,
+        "canonicalSection": 1,
+        "quote": "Sổ tay 14 thuộc Tổ dịch vụ 14, có hiệu lực từ ngày 01/10/2026.",
         "startOffset": 18,
-        "endOffset": 121
+        "endOffset": 80
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Tổ dịch vụ 14 quản lý; hiệu lực 01/10/2026.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "Tổ dịch vụ 14",
+          "01/10/2026"
+        ],
+        "answerFragments": [
+          "Tổ dịch vụ 14",
+          "01/10/2026"
+        ]
       }
     ]
   },
   {
     "id": "q-15",
     "kind": "direct",
+    "taskType": "calendar_day_interpretation",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-15"
     ],
-    "question": "Theo Sổ tay 15, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Thời hạn thông báo hoàn tiền trong Sổ tay 15 có loại trừ ngày nghỉ và ngày lễ không?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "45 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Không. Thời hạn thông báo tính cả ngày nghỉ và ngày lễ.",
     "expectedSources": [
       {
         "fixtureId": "handbook-15",
         "pageNumber": null,
-        "paragraphIndex": 5,
-        "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 45 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
+        "paragraphIndex": 2,
+        "canonicalSection": 2,
+        "quote": "Điều kiện hoàn tiền thứ nhất: thông báo cho bộ phận tiếp nhận trong vòng 22 ngày kể từ ngày mua, tính cả ngày nghỉ và ngày lễ.",
         "startOffset": 18,
-        "endOffset": 121
+        "endOffset": 144
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Không loại trừ ngày nghỉ/lễ.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "tính cả ngày nghỉ và ngày lễ"
+        ],
+        "answerFragments": [
+          "Không",
+          "tính cả ngày nghỉ và ngày lễ"
+        ]
       }
     ]
   },
   {
     "id": "q-16",
     "kind": "direct",
+    "taskType": "date_verification",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-16"
     ],
-    "question": "Theo Sổ tay 16, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 16, phải kiểm tra ngày nào trước khi xác nhận đã nhận thông báo?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "46 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Bộ phận tiếp nhận phải kiểm tra ngày mua được ghi nhận.",
     "expectedSources": [
       {
         "fixtureId": "handbook-16",
         "pageNumber": null,
-        "paragraphIndex": 5,
-        "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 46 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 121
+        "paragraphIndex": 2,
+        "canonicalSection": 2,
+        "quote": "Bộ phận tiếp nhận kiểm tra ngày mua được ghi nhận trước khi xác nhận đã nhận thông báo của người đề nghị hoàn tiền.",
+        "startOffset": 198,
+        "endOffset": 313
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Kiểm tra ngày mua đã ghi nhận.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "ngày mua được ghi nhận"
+        ],
+        "answerFragments": [
+          "ngày mua được ghi nhận"
+        ]
       }
     ]
   },
   {
     "id": "q-17",
     "kind": "direct",
+    "taskType": "closing_precondition",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-17"
     ],
-    "question": "Theo Sổ tay 17, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 17, có thể đóng hồ sơ trước khi ghi nhận quyết định xử lý không?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "47 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Không. Chỉ đóng hồ sơ sau khi đã ghi nhận quyết định xử lý.",
     "expectedSources": [
       {
         "fixtureId": "handbook-17",
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 47 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 121
+        "quote": "Chỉ đóng hồ sơ sau khi đã ghi nhận quyết định xử lý.",
+        "startOffset": 131,
+        "endOffset": 183
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Ghi nhận quyết định trước khi đóng hồ sơ.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "Chỉ đóng hồ sơ sau khi đã ghi nhận quyết định xử lý"
+        ],
+        "answerFragments": [
+          "Không",
+          "Chỉ đóng hồ sơ sau khi đã ghi nhận quyết định xử lý"
+        ]
       }
     ]
   },
   {
     "id": "q-18",
     "kind": "direct",
+    "taskType": "access_control",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-18"
     ],
-    "question": "Theo Sổ tay 18, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 18, ai được cấp quyền truy cập chứng từ đã lưu cùng hồ sơ?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "48 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Chỉ tổ dịch vụ chịu trách nhiệm giải quyết mới được cấp quyền truy cập.",
     "expectedSources": [
       {
         "fixtureId": "handbook-18",
         "pageNumber": null,
         "paragraphIndex": 5,
         "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 48 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 121
+        "quote": "Chứng từ phải được lưu cùng hồ sơ; chỉ tổ dịch vụ chịu trách nhiệm giải quyết mới được cấp quyền truy cập.",
+        "startOffset": 184,
+        "endOffset": 290
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Chỉ tổ chịu trách nhiệm giải quyết được truy cập.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "chỉ tổ dịch vụ chịu trách nhiệm giải quyết"
+        ],
+        "answerFragments": [
+          "Chỉ tổ dịch vụ chịu trách nhiệm giải quyết"
+        ]
       }
     ]
   },
   {
     "id": "q-19",
     "kind": "direct",
+    "taskType": "amount_and_currency",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-19"
     ],
-    "question": "Theo Sổ tay 19, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Mức hoàn tiền tối đa theo Sổ tay 19 là bao nhiêu và dùng đơn vị tiền nào?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "49 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Mức hoàn tiền tối đa là 575 đô la Mỹ (USD).",
     "expectedSources": [
       {
         "fixtureId": "handbook-19",
         "pageNumber": null,
-        "paragraphIndex": 5,
-        "canonicalSection": 5,
-        "quote": "Chứng từ liên quan phải được lưu giữ trong 49 ngày kể từ ngày đóng hồ sơ, tính cả ngày nghỉ và ngày lễ.",
-        "startOffset": 18,
-        "endOffset": 121
+        "paragraphIndex": 3,
+        "canonicalSection": 3,
+        "quote": "Mức hoàn tiền tối đa là 575 đô la Mỹ (USD).",
+        "startOffset": 129,
+        "endOffset": 172
+      }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Mức trần 575 USD.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "575 đô la Mỹ (USD)"
+        ],
+        "answerFragments": [
+          "575 đô la Mỹ (USD)"
+        ]
       }
     ]
   },
   {
     "id": "q-20",
     "kind": "direct",
+    "taskType": "retention_time_anchor",
+    "scopeMode": "SELECTED",
     "documentFixtureIds": [
       "handbook-20"
     ],
-    "question": "Theo Sổ tay 20, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "question": "Theo Sổ tay 20, thời gian lưu giữ chứng từ bắt đầu từ ngày mua hàng hay ngày đóng hồ sơ?",
     "history": [],
     "answerable": true,
-    "expectedAnswer": "50 ngày sau khi đóng hồ sơ.",
+    "expectedOutcome": "ANSWER",
+    "expectedAnswer": "Thời gian lưu giữ bắt đầu kể từ ngày đóng hồ sơ, không phải ngày mua hàng.",
     "expectedSources": [
       {
         "fixtureId": "handbook-20",
@@ -627,71 +1137,200 @@
         "startOffset": 18,
         "endOffset": 121
       }
+    ],
+    "expectedClaims": [
+      {
+        "text": "Mốc bắt đầu là ngày đóng hồ sơ.",
+        "sourceIndices": [
+          0
+        ],
+        "evidenceFragments": [
+          "kể từ ngày đóng hồ sơ"
+        ],
+        "answerFragments": [
+          "kể từ ngày đóng hồ sơ"
+        ]
+      }
     ]
   },
   {
     "id": "q-21",
     "kind": "unanswerable",
+    "taskType": "bank_account",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-01"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Số tài khoản ngân hàng để nhận tiền là gì?",
+    "question": "Tra cứu toàn bộ các sổ tay: số tài khoản ngân hàng được chỉ định để nhận tiền hoàn là gì?",
     "history": [],
     "answerable": false,
     "expectedOutcome": "NO_EVIDENCE",
-    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
-    "expectedSources": []
+    "expectedAnswer": "Không tìm thấy số tài khoản ngân hàng nhận tiền hoàn trong các sổ tay đã cung cấp.",
+    "expectedSources": [],
+    "expectedClaims": [],
+    "noEvidenceTopic": "bank_account"
   },
   {
     "id": "q-22",
     "kind": "unanswerable",
+    "taskType": "legal_signatory",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-02"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Ai là giám đốc pháp lý ký tài liệu này?",
+    "question": "Trong toàn bộ thư viện, có nêu họ tên giám đốc pháp lý ký ban hành các sổ tay không? Nếu có, cho biết tên.",
     "history": [],
     "answerable": false,
     "expectedOutcome": "NO_EVIDENCE",
-    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
-    "expectedSources": []
+    "expectedAnswer": "Không tìm thấy họ tên giám đốc pháp lý ký ban hành trong các sổ tay đã cung cấp.",
+    "expectedSources": [],
+    "expectedClaims": [],
+    "noEvidenceTopic": "legal_signatory"
   },
   {
     "id": "q-23",
     "kind": "unanswerable",
+    "taskType": "mobile_application",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-03"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Có thể nộp hồ sơ qua ứng dụng di động nào?",
+    "question": "Tra cứu toàn bộ sổ tay: ứng dụng di động cụ thể nào được chỉ định để nộp hồ sơ hoàn tiền?",
     "history": [],
     "answerable": false,
     "expectedOutcome": "NO_EVIDENCE",
-    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
-    "expectedSources": []
+    "expectedAnswer": "Không tìm thấy tên ứng dụng di động được chỉ định để nộp hồ sơ trong các sổ tay đã cung cấp.",
+    "expectedSources": [],
+    "expectedClaims": [],
+    "noEvidenceTopic": "mobile_application"
   },
   {
     "id": "q-24",
     "kind": "unanswerable",
+    "taskType": "late_refund_interest",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-04"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Lãi suất cho khoản hoàn tiền chậm là bao nhiêu?",
+    "question": "Toàn bộ thư viện có quy định mức lãi suất áp dụng khi hoàn tiền chậm không? Nếu có, mức đó là bao nhiêu?",
     "history": [],
     "answerable": false,
     "expectedOutcome": "NO_EVIDENCE",
-    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
-    "expectedSources": []
+    "expectedAnswer": "Không tìm thấy quy định về lãi suất hoàn tiền chậm trong các sổ tay đã cung cấp.",
+    "expectedSources": [],
+    "expectedClaims": [],
+    "noEvidenceTopic": "late_refund_interest"
   },
   {
     "id": "q-25",
     "kind": "unanswerable",
+    "taskType": "international_shipping",
+    "scopeMode": "ALL_READY",
     "documentFixtureIds": [
-      "handbook-05"
+      "handbook-01",
+      "handbook-02",
+      "handbook-03",
+      "handbook-04",
+      "handbook-05",
+      "handbook-06",
+      "handbook-07",
+      "handbook-08",
+      "handbook-09",
+      "handbook-10",
+      "handbook-11",
+      "handbook-12",
+      "handbook-13",
+      "handbook-14",
+      "handbook-15",
+      "handbook-16",
+      "handbook-17",
+      "handbook-18",
+      "handbook-19",
+      "handbook-20"
     ],
-    "question": "Phí vận chuyển quốc tế được tính theo công thức nào?",
+    "question": "Dựa trên toàn bộ sổ tay, hãy cho biết công thức tính phí vận chuyển quốc tế.",
     "history": [],
     "answerable": false,
     "expectedOutcome": "NO_EVIDENCE",
-    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
-    "expectedSources": []
+    "expectedAnswer": "Không tìm thấy công thức tính phí vận chuyển quốc tế trong các sổ tay đã cung cấp.",
+    "expectedSources": [],
+    "expectedClaims": [],
+    "noEvidenceTopic": "international_shipping"
   }
 ]

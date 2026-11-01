@@ -8,6 +8,7 @@ import unicodedata
 from pathlib import Path
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+from question_suite import EVALUATION_VERSION, build_questions, render_review
 
 ROOT = Path(__file__).resolve().parent
 CORPUS_VERSION = "synthetic-vi-v2"
@@ -85,7 +86,7 @@ def generate():
     if manifest_path.exists() and json.loads(manifest_path.read_text(encoding="utf-8"))["reviewStatus"] == "APPROVED":
         raise SystemExit("Approved fixtures are frozen; create a new corpus version instead")
     (ROOT / "fixtures").mkdir(parents=True, exist_ok=True)
-    documents, questions = [], []
+    documents, canonical_text = [], {}
     for index in range(1, 21):
         fixture_id = f"handbook-{index:02d}"
         extension = "pdf" if index <= 8 else "docx" if index <= 14 else "txt"
@@ -117,6 +118,7 @@ def generate():
         else:
             file.write_text("\n\n".join(sections) + "\n", encoding="utf-8", newline="\n")
         canonical = f"canonical/{fixture_id}.json"
+        canonical_text[fixture_id] = sections
         write_json(ROOT / canonical, {"fixtureId": fixture_id, "language": "vi", "paragraphs": sections})
         documents.append({"id": fixture_id, "path": f"fixtures/{file.name}",
                           "format": extension, "sha256": hashlib.sha256(file.read_bytes()).hexdigest(),
@@ -124,53 +126,18 @@ def generate():
                           "paragraphCount": None if extension == "pdf" else 5,
                           "fixtureVersion": CORPUS_VERSION, "language": "vi"})
 
-        def source(section):
-            paragraph = sections[section - 1]
-            quote = facts[section - 1]
-            return {"fixtureId": fixture_id, "pageNumber": section if extension == "pdf" else None,
-                    "paragraphIndex": section if extension != "pdf" else None,
-                    "canonicalSection": section, "quote": quote,
-                    "startOffset": paragraph.index(quote), "endOffset": paragraph.index(quote) + len(quote)}
-
-        history = []
-        if index <= 5:
-            kind = "multi_turn"
-            question = "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?"
-            answer = f"Nộp hồ sơ đầy đủ trong {submit} ngày kể từ khi mua."
-            references = [source(3)]
-            history = [{"role": "USER", "content": f"Sổ tay {index:02d} có hai điều kiện hoàn tiền nào?"},
-                       {"role": "ASSISTANT", "content": facts[1] + " " + facts[2],
-                        "sourceRefs": [source(2), source(3)]}]
-        elif index <= 10:
-            kind = "multi_source"
-            question = f"Theo Sổ tay {index:02d}, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?"
-            answer = f"Thông báo trong {notify} ngày và nộp hồ sơ đầy đủ trong {submit} ngày kể từ khi mua."
-            references = [source(2), source(3)]
-        elif index <= 13:
-            kind = "exact_keyword"
-            question = f"Mã hồ sơ chính xác của Sổ tay {index:02d} là gì? Giữ nguyên dấu và số 0 ở đầu."
-            answer, references = f"REF-2026-{index:03d}", [source(4)]
-        else:
-            kind = "direct"
-            question = f"Theo Sổ tay {index:02d}, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?"
-            answer, references = f"{retention} ngày sau khi đóng hồ sơ.", [source(5)]
-        questions.append({"id": f"q-{index:02d}", "kind": kind, "documentFixtureIds": [fixture_id],
-                          "question": question, "history": history, "answerable": True,
-                          "expectedAnswer": answer, "expectedSources": references})
-    unknowns = ["Số tài khoản ngân hàng để nhận tiền là gì?", "Ai là giám đốc pháp lý ký tài liệu này?",
-                "Có thể nộp hồ sơ qua ứng dụng di động nào?", "Lãi suất cho khoản hoàn tiền chậm là bao nhiêu?",
-                "Phí vận chuyển quốc tế được tính theo công thức nào?"]
-    for index, question in enumerate(unknowns, 1):
-        questions.append({"id": f"q-{20 + index:02d}", "kind": "unanswerable",
-                          "documentFixtureIds": [f"handbook-{index:02d}"], "question": question,
-                          "history": [], "answerable": False, "expectedOutcome": "NO_EVIDENCE",
-                          "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.", "expectedSources": []})
+    questions, audit = build_questions(documents, canonical_text)
+    write_json(ROOT / "questions.json", questions)
+    write_json(ROOT / "no_evidence_audit.json", audit)
+    (ROOT / "REVIEW.md").write_text(render_review(questions, audit), encoding="utf-8", newline="\n")
     write_json(manifest_path, {"corpusVersion": CORPUS_VERSION, "language": "vi", "reviewStatus": "PENDING_REVIEW",
+                              "evaluationVersion": EVALUATION_VERSION,
+                              "questionsSha256": hashlib.sha256((ROOT / "questions.json").read_bytes()).hexdigest(),
+                              "noEvidenceAuditSha256": hashlib.sha256((ROOT / "no_evidence_audit.json").read_bytes()).hexdigest(),
                               "reviewOwner": "Tuan Anh", "reviewedAt": None,
                               "pdfFont": {"path": "assets/fonts/NotoSans-Regular.ttf",
                                           "sha256": hashlib.sha256(FONT_PATH.read_bytes()).hexdigest()},
                               "pipelineVersion": "UNSET_UNTIL_PHASE_6", "documents": documents})
-    write_json(ROOT / "questions.json", questions)
     print("Generated 20 synthetic documents and 25 labeled questions; review is pending.")
 
 

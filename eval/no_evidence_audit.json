@@ -1,0 +1,160 @@
+{
+  "evaluationVersion": "questions-vi-v3",
+  "reviewStatus": "PENDING_REVIEW",
+  "method": "static_template_review_and_full_corpus_lexical_scan",
+  "checkedDocumentFixtureIds": [
+    "handbook-01",
+    "handbook-02",
+    "handbook-03",
+    "handbook-04",
+    "handbook-05",
+    "handbook-06",
+    "handbook-07",
+    "handbook-08",
+    "handbook-09",
+    "handbook-10",
+    "handbook-11",
+    "handbook-12",
+    "handbook-13",
+    "handbook-14",
+    "handbook-15",
+    "handbook-16",
+    "handbook-17",
+    "handbook-18",
+    "handbook-19",
+    "handbook-20"
+  ],
+  "checkedPassageCount": 100,
+  "corpusTextSha256": "c5eb500436d9929ccddee9e19c4658c580d6dae37c4046d3e91b223c825b0f7e",
+  "limitation": "Không có từ khóa không chứng minh thiếu bằng chứng về ngữ nghĩa. Cần người duyệt toàn bộ nhãn; chỉ index fixtures, không đưa audit/ground truth vào context.",
+  "cases": [
+    {
+      "questionId": "q-21",
+      "topic": "bank_account",
+      "probeTerms": [
+        "tài khoản ngân hàng",
+        "số tài khoản",
+        "ngân hàng",
+        "IBAN",
+        "SWIFT"
+      ],
+      "lexicalHits": [],
+      "assessment": "NO_EVIDENCE_CANDIDATE",
+      "rationale": "Các sổ tay nêu mã hồ sơ REF và số tiền, không nêu ngân hàng hoặc tài khoản nhận tiền. Mã REF không phải số tài khoản.",
+      "nearbyEvidence": [
+        {
+          "fixtureId": "handbook-01",
+          "pageNumber": 4,
+          "paragraphIndex": null,
+          "canonicalSection": 4,
+          "quote": "Mã hồ sơ chính xác là REF-2026-001.",
+          "startOffset": 18,
+          "endOffset": 53
+        }
+      ]
+    },
+    {
+      "questionId": "q-22",
+      "topic": "legal_signatory",
+      "probeTerms": [
+        "giám đốc pháp lý",
+        "người ký ban hành",
+        "ký ban hành",
+        "chữ ký",
+        "họ tên"
+      ],
+      "lexicalHits": [],
+      "assessment": "NO_EVIDENCE_CANDIDATE",
+      "rationale": "Phần mở đầu chỉ nêu tổ dịch vụ và ngày hiệu lực; không có tên người ký hoặc giám đốc pháp lý.",
+      "nearbyEvidence": [
+        {
+          "fixtureId": "handbook-01",
+          "pageNumber": 1,
+          "paragraphIndex": null,
+          "canonicalSection": 1,
+          "quote": "Sổ tay 01 thuộc Tổ dịch vụ 01, có hiệu lực từ ngày 01/10/2026.",
+          "startOffset": 18,
+          "endOffset": 80
+        }
+      ]
+    },
+    {
+      "questionId": "q-23",
+      "topic": "mobile_application",
+      "probeTerms": [
+        "ứng dụng di động",
+        "ứng dụng điện thoại",
+        "ứng dụng nộp hồ sơ",
+        "tên ứng dụng",
+        "mobile app",
+        "Android",
+        "iOS"
+      ],
+      "lexicalHits": [],
+      "assessment": "NO_EVIDENCE_CANDIDATE",
+      "rationale": "Danh mục giấy tờ và yêu cầu thông tin liên hệ không chỉ định ứng dụng hoặc nền tảng di động để nộp hồ sơ.",
+      "nearbyEvidence": [
+        {
+          "fixtureId": "handbook-03",
+          "pageNumber": 3,
+          "paragraphIndex": null,
+          "canonicalSection": 3,
+          "quote": "Hồ sơ đầy đủ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
+          "startOffset": 182,
+          "endOffset": 275
+        }
+      ]
+    },
+    {
+      "questionId": "q-24",
+      "topic": "late_refund_interest",
+      "probeTerms": [
+        "lãi suất",
+        "tiền lãi",
+        "lãi chậm trả",
+        "lãi hoàn tiền",
+        "chậm hoàn tiền",
+        "hoàn tiền chậm"
+      ],
+      "lexicalHits": [],
+      "assessment": "NO_EVIDENCE_CANDIDATE",
+      "rationale": "Mức trần hoàn tiền và hạn nộp hồ sơ không phải lãi suất; không có quy định về tiền lãi hoặc hoàn tiền chậm.",
+      "nearbyEvidence": [
+        {
+          "fixtureId": "handbook-04",
+          "pageNumber": 3,
+          "paragraphIndex": null,
+          "canonicalSection": 3,
+          "quote": "Mức hoàn tiền tối đa là 200 đô la Mỹ (USD).",
+          "startOffset": 129,
+          "endOffset": 172
+        }
+      ]
+    },
+    {
+      "questionId": "q-25",
+      "topic": "international_shipping",
+      "probeTerms": [
+        "phí vận chuyển",
+        "cước vận chuyển",
+        "vận chuyển quốc tế",
+        "phí giao hàng",
+        "công thức vận chuyển"
+      ],
+      "lexicalHits": [],
+      "assessment": "NO_EVIDENCE_CANDIDATE",
+      "rationale": "Hồ sơ yêu cầu hóa đơn và giải trình nhưng không quy định vận chuyển, mức phí hoặc công thức tính cước.",
+      "nearbyEvidence": [
+        {
+          "fixtureId": "handbook-05",
+          "pageNumber": 3,
+          "paragraphIndex": null,
+          "canonicalSection": 3,
+          "quote": "Hồ sơ đầy đủ gồm hóa đơn, bản giải trình bằng văn bản và thông tin liên hệ của người đề nghị.",
+          "startOffset": 182,
+          "endOffset": 275
+        }
+      ]
+    }
+  ]
+}

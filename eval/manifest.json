@@ -2,6 +2,9 @@
   "corpusVersion": "synthetic-vi-v2",
   "language": "vi",
   "reviewStatus": "PENDING_REVIEW",
+  "evaluationVersion": "questions-vi-v3",
+  "questionsSha256": "b46d3c01b9cea9df446cec39eb48a13ecb923e2c1802dd43e151ce72be923f60",
+  "noEvidenceAuditSha256": "78c467dbc29c3adcfe65e6a25b55182092ea0248996ef4986fc0285dfdd76bc3",
   "reviewOwner": "Tuan Anh",
   "reviewedAt": null,
   "pdfFont": {

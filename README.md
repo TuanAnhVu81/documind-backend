@@ -83,6 +83,7 @@ Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự đ�
 .\mvnw.cmd -B -ntp verify
 python -m pip install -r eval/requirements.txt
 python eval/validate.py
+python -m unittest discover -s eval -p "test_*.py"
 ```
 
 Surefire chạy unit test, Failsafe chạy `*IT`; `verify` thất bại nếu integration test lỗi. Local lấy `TEST_DB_*` từ `.env` hoặc environment, chỉ chấp nhận tên database `documind_phase1_test`; không dùng database dev để chạy test. Không có cấu hình DB test thì tự tạo PostgreSQL pgvector bằng Testcontainers và dọn sau test; không skip test nếu Docker chưa chạy.
@@ -109,7 +110,7 @@ DB mới dùng pgvector 0.8.7/PostgreSQL 15, port loopback 5433 mặc định, p
 
 ## Eval và quyết định còn lại
 
-`eval/README.md` mô tả bộ 20 file/25 câu hỏi tổng hợp tiếng Việt (`synthetic-vi-v2`), ground truth và rubric; PDF nhúng font Noto Sans để giữ dấu khi hiển thị/trích xuất. Dữ liệu hiện **PENDING_REVIEW**, cần Tuấn Anh duyệt trước tuần 2. Phase 1 chưa chạy RAG/model thật và không có số liệu chất lượng được tuyên bố đạt.
+`eval/README.md` mô tả corpus 20 file tiếng Việt (`synthetic-vi-v2`) và 25 câu hỏi (`questions-vi-v3`); PDF nhúng Noto Sans. Q06–Q10 là multi_passage (nhiều đoạn, không bắt buộc nhiều tài liệu); Q21–Q25 được rà trên toàn bộ 20 tài liệu. `eval/REVIEW.md` có mọi thay đổi, lịch sử, đáp án và nguồn để duyệt; `eval/no_evidence_audit.json` lưu đối chiếu toàn corpus. Dữ liệu giữ **PENDING_REVIEW**; chưa chạy RAG/model thật và không tự tuyên bố điểm chất lượng đạt.
 
 Quyết định chi tiết: `docs/decisions/0001-local-foundation.md`. Trước Phase 2 phải chốt provider/model/số chiều; trước triển khai VPS phải chốt domain/tài nguyên. Không đưa `.env`, file upload hoặc API key vào Git.
 
