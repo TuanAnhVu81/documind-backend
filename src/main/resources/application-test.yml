@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL}
+    username: ${TEST_DB_USERNAME}
+    password: ${TEST_DB_PASSWORD}
+  flyway:
+    user: ${TEST_DB_MIGRATION_USERNAME:${TEST_DB_USERNAME}}
+    password: ${TEST_DB_MIGRATION_PASSWORD:${TEST_DB_PASSWORD}}
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+logging:
+  level:
+    root: WARN
+  threshold:
+    console: WARN

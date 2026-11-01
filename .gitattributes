@@ -1,2 +1,7 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+*.sh text eol=lf
+*.pdf binary
+*.docx binary
+*.json text eol=lf
+eval/fixtures/*.txt text eol=lf

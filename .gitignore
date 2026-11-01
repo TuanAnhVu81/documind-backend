@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local credentials, document uploads and scratch files
+.env
+.env.*
+!.env.example
+uploads/
+*.log
+.local/
+__pycache__/
+*.pyc

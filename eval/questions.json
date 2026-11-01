@@ -1,0 +1,697 @@
+[
+  {
+    "id": "q-01",
+    "kind": "multi_turn",
+    "documentFixtureIds": [
+      "handbook-01"
+    ],
+    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "history": [
+      {
+        "role": "USER",
+        "content": "Handbook 01 có hai điều kiện hoàn tiền nào?"
+      },
+      {
+        "role": "ASSISTANT",
+        "content": "Refund condition one: notify the service desk within 8 calendar days after purchase. Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
+        "sourceRefs": [
+          {
+            "fixtureId": "handbook-01",
+            "pageNumber": 2,
+            "paragraphIndex": null,
+            "canonicalSection": 2,
+            "quote": "Refund condition one: notify the service desk within 8 calendar days after purchase.",
+            "startOffset": 24,
+            "endOffset": 108
+          },
+          {
+            "fixtureId": "handbook-01",
+            "pageNumber": 3,
+            "paragraphIndex": null,
+            "canonicalSection": 3,
+            "quote": "Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
+            "startOffset": 24,
+            "endOffset": 145
+          }
+        ]
+      }
+    ],
+    "answerable": true,
+    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 15 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-01",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 15 calendar days after purchase. The reimbursement cap is USD 125.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-02",
+    "kind": "multi_turn",
+    "documentFixtureIds": [
+      "handbook-02"
+    ],
+    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "history": [
+      {
+        "role": "USER",
+        "content": "Handbook 02 có hai điều kiện hoàn tiền nào?"
+      },
+      {
+        "role": "ASSISTANT",
+        "content": "Refund condition one: notify the service desk within 9 calendar days after purchase. Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
+        "sourceRefs": [
+          {
+            "fixtureId": "handbook-02",
+            "pageNumber": 2,
+            "paragraphIndex": null,
+            "canonicalSection": 2,
+            "quote": "Refund condition one: notify the service desk within 9 calendar days after purchase.",
+            "startOffset": 24,
+            "endOffset": 108
+          },
+          {
+            "fixtureId": "handbook-02",
+            "pageNumber": 3,
+            "paragraphIndex": null,
+            "canonicalSection": 3,
+            "quote": "Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
+            "startOffset": 24,
+            "endOffset": 145
+          }
+        ]
+      }
+    ],
+    "answerable": true,
+    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 16 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-02",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 16 calendar days after purchase. The reimbursement cap is USD 150.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-03",
+    "kind": "multi_turn",
+    "documentFixtureIds": [
+      "handbook-03"
+    ],
+    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "history": [
+      {
+        "role": "USER",
+        "content": "Handbook 03 có hai điều kiện hoàn tiền nào?"
+      },
+      {
+        "role": "ASSISTANT",
+        "content": "Refund condition one: notify the service desk within 10 calendar days after purchase. Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
+        "sourceRefs": [
+          {
+            "fixtureId": "handbook-03",
+            "pageNumber": 2,
+            "paragraphIndex": null,
+            "canonicalSection": 2,
+            "quote": "Refund condition one: notify the service desk within 10 calendar days after purchase.",
+            "startOffset": 24,
+            "endOffset": 109
+          },
+          {
+            "fixtureId": "handbook-03",
+            "pageNumber": 3,
+            "paragraphIndex": null,
+            "canonicalSection": 3,
+            "quote": "Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
+            "startOffset": 24,
+            "endOffset": 145
+          }
+        ]
+      }
+    ],
+    "answerable": true,
+    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 17 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-03",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 17 calendar days after purchase. The reimbursement cap is USD 175.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-04",
+    "kind": "multi_turn",
+    "documentFixtureIds": [
+      "handbook-04"
+    ],
+    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "history": [
+      {
+        "role": "USER",
+        "content": "Handbook 04 có hai điều kiện hoàn tiền nào?"
+      },
+      {
+        "role": "ASSISTANT",
+        "content": "Refund condition one: notify the service desk within 11 calendar days after purchase. Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
+        "sourceRefs": [
+          {
+            "fixtureId": "handbook-04",
+            "pageNumber": 2,
+            "paragraphIndex": null,
+            "canonicalSection": 2,
+            "quote": "Refund condition one: notify the service desk within 11 calendar days after purchase.",
+            "startOffset": 24,
+            "endOffset": 109
+          },
+          {
+            "fixtureId": "handbook-04",
+            "pageNumber": 3,
+            "paragraphIndex": null,
+            "canonicalSection": 3,
+            "quote": "Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
+            "startOffset": 24,
+            "endOffset": 145
+          }
+        ]
+      }
+    ],
+    "answerable": true,
+    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 18 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-04",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 18 calendar days after purchase. The reimbursement cap is USD 200.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-05",
+    "kind": "multi_turn",
+    "documentFixtureIds": [
+      "handbook-05"
+    ],
+    "question": "Điều kiện thứ hai phải hoàn tất trong bao nhiêu ngày kể từ khi mua?",
+    "history": [
+      {
+        "role": "USER",
+        "content": "Handbook 05 có hai điều kiện hoàn tiền nào?"
+      },
+      {
+        "role": "ASSISTANT",
+        "content": "Refund condition one: notify the service desk within 12 calendar days after purchase. Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
+        "sourceRefs": [
+          {
+            "fixtureId": "handbook-05",
+            "pageNumber": 2,
+            "paragraphIndex": null,
+            "canonicalSection": 2,
+            "quote": "Refund condition one: notify the service desk within 12 calendar days after purchase.",
+            "startOffset": 24,
+            "endOffset": 109
+          },
+          {
+            "fixtureId": "handbook-05",
+            "pageNumber": 3,
+            "paragraphIndex": null,
+            "canonicalSection": 3,
+            "quote": "Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
+            "startOffset": 24,
+            "endOffset": 145
+          }
+        ]
+      }
+    ],
+    "answerable": true,
+    "expectedAnswer": "Nộp hồ sơ đầy đủ trong 19 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-05",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 19 calendar days after purchase. The reimbursement cap is USD 225.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-06",
+    "kind": "multi_source",
+    "documentFixtureIds": [
+      "handbook-06"
+    ],
+    "question": "Theo Handbook 06, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "Thông báo trong 13 ngày và nộp hồ sơ đầy đủ trong 20 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-06",
+        "pageNumber": 2,
+        "paragraphIndex": null,
+        "canonicalSection": 2,
+        "quote": "Refund condition one: notify the service desk within 13 calendar days after purchase.",
+        "startOffset": 24,
+        "endOffset": 109
+      },
+      {
+        "fixtureId": "handbook-06",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 20 calendar days after purchase. The reimbursement cap is USD 250.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-07",
+    "kind": "multi_source",
+    "documentFixtureIds": [
+      "handbook-07"
+    ],
+    "question": "Theo Handbook 07, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "Thông báo trong 14 ngày và nộp hồ sơ đầy đủ trong 21 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-07",
+        "pageNumber": 2,
+        "paragraphIndex": null,
+        "canonicalSection": 2,
+        "quote": "Refund condition one: notify the service desk within 14 calendar days after purchase.",
+        "startOffset": 24,
+        "endOffset": 109
+      },
+      {
+        "fixtureId": "handbook-07",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 21 calendar days after purchase. The reimbursement cap is USD 275.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-08",
+    "kind": "multi_source",
+    "documentFixtureIds": [
+      "handbook-08"
+    ],
+    "question": "Theo Handbook 08, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "Thông báo trong 15 ngày và nộp hồ sơ đầy đủ trong 22 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-08",
+        "pageNumber": 2,
+        "paragraphIndex": null,
+        "canonicalSection": 2,
+        "quote": "Refund condition one: notify the service desk within 15 calendar days after purchase.",
+        "startOffset": 24,
+        "endOffset": 109
+      },
+      {
+        "fixtureId": "handbook-08",
+        "pageNumber": 3,
+        "paragraphIndex": null,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 22 calendar days after purchase. The reimbursement cap is USD 300.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-09",
+    "kind": "multi_source",
+    "documentFixtureIds": [
+      "handbook-09"
+    ],
+    "question": "Theo Handbook 09, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "Thông báo trong 16 ngày và nộp hồ sơ đầy đủ trong 23 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-09",
+        "pageNumber": null,
+        "paragraphIndex": 2,
+        "canonicalSection": 2,
+        "quote": "Refund condition one: notify the service desk within 16 calendar days after purchase.",
+        "startOffset": 24,
+        "endOffset": 109
+      },
+      {
+        "fixtureId": "handbook-09",
+        "pageNumber": null,
+        "paragraphIndex": 3,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 23 calendar days after purchase. The reimbursement cap is USD 325.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-10",
+    "kind": "multi_source",
+    "documentFixtureIds": [
+      "handbook-10"
+    ],
+    "question": "Theo Handbook 10, phải thông báo và nộp hồ sơ hoàn tiền trong bao nhiêu ngày kể từ khi mua?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "Thông báo trong 17 ngày và nộp hồ sơ đầy đủ trong 24 ngày kể từ khi mua.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-10",
+        "pageNumber": null,
+        "paragraphIndex": 2,
+        "canonicalSection": 2,
+        "quote": "Refund condition one: notify the service desk within 17 calendar days after purchase.",
+        "startOffset": 24,
+        "endOffset": 109
+      },
+      {
+        "fixtureId": "handbook-10",
+        "pageNumber": null,
+        "paragraphIndex": 3,
+        "canonicalSection": 3,
+        "quote": "Refund condition two: submit the complete claim within 24 calendar days after purchase. The reimbursement cap is USD 350.",
+        "startOffset": 24,
+        "endOffset": 145
+      }
+    ]
+  },
+  {
+    "id": "q-11",
+    "kind": "exact_keyword",
+    "documentFixtureIds": [
+      "handbook-11"
+    ],
+    "question": "Mã hồ sơ chính xác của Handbook 11 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "REF-2026-011",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-11",
+        "pageNumber": null,
+        "paragraphIndex": 4,
+        "canonicalSection": 4,
+        "quote": "The exact claim identifier is REF-2026-011. Quote this identifier on every claim form.",
+        "startOffset": 24,
+        "endOffset": 110
+      }
+    ]
+  },
+  {
+    "id": "q-12",
+    "kind": "exact_keyword",
+    "documentFixtureIds": [
+      "handbook-12"
+    ],
+    "question": "Mã hồ sơ chính xác của Handbook 12 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "REF-2026-012",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-12",
+        "pageNumber": null,
+        "paragraphIndex": 4,
+        "canonicalSection": 4,
+        "quote": "The exact claim identifier is REF-2026-012. Quote this identifier on every claim form.",
+        "startOffset": 24,
+        "endOffset": 110
+      }
+    ]
+  },
+  {
+    "id": "q-13",
+    "kind": "exact_keyword",
+    "documentFixtureIds": [
+      "handbook-13"
+    ],
+    "question": "Mã hồ sơ chính xác của Handbook 13 là gì? Giữ nguyên dấu và số 0 ở đầu.",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "REF-2026-013",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-13",
+        "pageNumber": null,
+        "paragraphIndex": 4,
+        "canonicalSection": 4,
+        "quote": "The exact claim identifier is REF-2026-013. Quote this identifier on every claim form.",
+        "startOffset": 24,
+        "endOffset": 110
+      }
+    ]
+  },
+  {
+    "id": "q-14",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-14"
+    ],
+    "question": "Theo Handbook 14, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "44 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-14",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 44 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-15",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-15"
+    ],
+    "question": "Theo Handbook 15, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "45 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-15",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 45 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-16",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-16"
+    ],
+    "question": "Theo Handbook 16, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "46 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-16",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 46 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-17",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-17"
+    ],
+    "question": "Theo Handbook 17, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "47 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-17",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 47 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-18",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-18"
+    ],
+    "question": "Theo Handbook 18, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "48 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-18",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 48 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-19",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-19"
+    ],
+    "question": "Theo Handbook 19, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "49 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-19",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 49 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-20",
+    "kind": "direct",
+    "documentFixtureIds": [
+      "handbook-20"
+    ],
+    "question": "Theo Handbook 20, cần giữ chứng từ bao nhiêu ngày sau khi đóng hồ sơ?",
+    "history": [],
+    "answerable": true,
+    "expectedAnswer": "50 ngày sau khi đóng hồ sơ.",
+    "expectedSources": [
+      {
+        "fixtureId": "handbook-20",
+        "pageNumber": null,
+        "paragraphIndex": 5,
+        "canonicalSection": 5,
+        "quote": "Supporting records must be retained for 50 calendar days after case closure.",
+        "startOffset": 24,
+        "endOffset": 100
+      }
+    ]
+  },
+  {
+    "id": "q-21",
+    "kind": "unanswerable",
+    "documentFixtureIds": [
+      "handbook-01"
+    ],
+    "question": "Số tài khoản ngân hàng để nhận tiền là gì?",
+    "history": [],
+    "answerable": false,
+    "expectedOutcome": "NO_EVIDENCE",
+    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
+    "expectedSources": []
+  },
+  {
+    "id": "q-22",
+    "kind": "unanswerable",
+    "documentFixtureIds": [
+      "handbook-02"
+    ],
+    "question": "Ai là giám đốc pháp lý ký tài liệu này?",
+    "history": [],
+    "answerable": false,
+    "expectedOutcome": "NO_EVIDENCE",
+    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
+    "expectedSources": []
+  },
+  {
+    "id": "q-23",
+    "kind": "unanswerable",
+    "documentFixtureIds": [
+      "handbook-03"
+    ],
+    "question": "Có thể nộp hồ sơ qua ứng dụng di động nào?",
+    "history": [],
+    "answerable": false,
+    "expectedOutcome": "NO_EVIDENCE",
+    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
+    "expectedSources": []
+  },
+  {
+    "id": "q-24",
+    "kind": "unanswerable",
+    "documentFixtureIds": [
+      "handbook-04"
+    ],
+    "question": "Lãi suất cho khoản hoàn tiền chậm là bao nhiêu?",
+    "history": [],
+    "answerable": false,
+    "expectedOutcome": "NO_EVIDENCE",
+    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
+    "expectedSources": []
+  },
+  {
+    "id": "q-25",
+    "kind": "unanswerable",
+    "documentFixtureIds": [
+      "handbook-05"
+    ],
+    "question": "Phí vận chuyển quốc tế được tính theo công thức nào?",
+    "history": [],
+    "answerable": false,
+    "expectedOutcome": "NO_EVIDENCE",
+    "expectedAnswer": "Không tìm thấy thông tin này trong tài liệu.",
+    "expectedSources": []
+  }
+]

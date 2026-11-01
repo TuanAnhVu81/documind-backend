@@ -1,0 +1,6 @@
+server:
+  shutdown: graceful
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+# No database credentials, API keys, public Swagger, or dev defaults here.

@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: documind-backend
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    clean-disabled: true
+    user: ${DB_MIGRATION_USERNAME:${DB_USERNAME}}
+    password: ${DB_MIGRATION_PASSWORD:${DB_PASSWORD}}
+  ai:
+    # Phase 1 deliberately starts without a provider account or API key.
+    model:
+      chat: none
+      embedding: none
+      embedding.text: none
+      embedding.multimodal: none
+      audio:
+        speech: none
+        transcription: none
+      image: none
+      moderation: none
+    chat:
+      client:
+        enabled: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  mvc:
+    problemdetails:
+      enabled: true
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db,pgvector
+logging:
+  level:
+    root: INFO
+  threshold:
+    console: INFO
+  structured:
+    format:
+      console: logstash
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -1,0 +1,21 @@
+services:
+  db:
+    # Optional alternative for a new machine. The current setup reuses local_postgres.
+    profiles: [standalone-db]
+    image: pgvector/pgvector:0.8.7-pg15
+    environment:
+      POSTGRES_DB: documind
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${DOCUMIND_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - documind_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d documind"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+volumes:
+  documind_postgres:
