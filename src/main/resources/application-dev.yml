@@ -3,3 +3,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+logging:
+  structured:
+    format:
+      console: ""
