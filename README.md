@@ -1,6 +1,6 @@
 # DocuMind Backend
 
-Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện triển khai **Phase 1: nền tảng local**; chưa có schema nghiệp vụ, đăng nhập, upload, worker hay RAG. Hợp đồng sản phẩm nằm ở `../PRD.md`, `../TECH_SPEC.md` và `../BE Implementation Plan.md`.
+Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện có nền tảng local và schema/tầng truy cập dữ liệu Phase 2; chưa có đăng nhập, upload, worker hay RAG. Hợp đồng sản phẩm nằm ở `../PRD.md`, `../TECH_SPEC.md` và `../BE Implementation Plan.md`.
 
 ## Công nghệ và phạm vi
 
@@ -16,15 +16,15 @@ Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện t
 | Testcontainers | 2.0.5, do Spring Boot BOM quản lý |
 | Kiểm thử | JUnit 6, MockMvc, Failsafe, JaCoCo 0.8.14 |
 
-Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. Các mô-đun nghiệp vụ mới có package scaffolding; `common` chứa cấu hình, request ID, lỗi API và health. Chọn model chat/embedding, chiều vector và phương án rerank trước Phase 2; quyết định tắt AI ở Phase 1 đã được chủ dự án xác nhận.
+Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. Phase 2 bổ sung schema và tầng truy cập; các API nghiệp vụ vẫn chưa triển khai. Embedding đã chọn `text-embedding-3-small` với 1.536 chiều; AI vẫn tắt. Chat model và phương án rerank chưa chọn.
 
 ```mermaid
 flowchart LR
     Browser[Trình duyệt / Swagger] --> API[Spring Boot MVC]
     API --> Common[Security mặc định đóng / requestId / ProblemDetail]
     API --> DB[(PostgreSQL 15 + pgvector)]
-    Flyway[Flyway V1: CREATE EXTENSION vector] --> DB
-    AI[Spring AI starter: tắt trong Phase 1]
+    Flyway[Flyway V1-V2: extension và schema] --> DB
+    AI[Spring AI starter: đang tắt]
 ```
 
 ## Chạy local với PostgreSQL đang có
@@ -54,7 +54,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy/postgres/setup-local.
 
 Setup tạo role `documind` với mật khẩu ngẫu nhiên, hai database `documind` và `documind_phase1_test`, rồi lưu `.env` bị Git bỏ qua. Script không ghi đè role/database đã tồn tại nếu chưa có `.env`, và không in credential. Nếu `.env` đã có, script giữ nguyên; có thể điền thủ công theo `.env.example` khi container dùng password file hoặc cấu hình khác.
 
-Ứng dụng tự đọc `.env` theo cú pháp Java properties; không cần export mật khẩu ra terminal. Runtime dùng role `documind`; Flyway dùng tài khoản migration riêng để bật extension. Không dùng tài khoản superuser làm runtime production. Role runtime chưa có bảng nghiệp vụ để truy cập trong Phase 1; quyền trên các bảng tương lai được thiết kế ở Phase 2.
+Ứng dụng tự đọc `.env` theo cú pháp Java properties; không cần export mật khẩu ra terminal. Runtime dùng role `documind`; Flyway dùng tài khoản migration riêng. Migration V2 cấp quyền dữ liệu cho chủ database; nếu runtime dùng role khác chủ database thì quản trị viên phải cấp quyền SELECT/INSERT/UPDATE/DELETE tương ứng. Không dùng tài khoản superuser làm runtime production.
 
 Một lệnh khởi chạy app sau setup: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` trên Linux/macOS, hoặc lệnh PowerShell ở trên. Có thể chạy JAR sau `verify`:
 
@@ -80,7 +80,7 @@ Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự đ�
 ## Kiểm thử
 
 ```powershell
-.\mvnw.cmd -B -ntp verify
+.\mvnw.cmd -B -ntp verify "-Ddocumind.testcontainers=true"
 python -m pip install -r eval/requirements.txt
 python eval/validate.py
 python -m unittest discover -s eval -p "test_*.py"
@@ -93,6 +93,8 @@ Kiểm tra đúng đường chạy CI bằng container tạm, dù máy có `.env
 ```powershell
 .\mvnw.cmd -B -ntp verify "-Ddocumind.testcontainers=true"
 ```
+
+Nếu database test local đã chạy bản V2 cũ trước khi V2 được chỉnh theo review, Flyway sẽ báo sai checksum. Không dùng `repair` đơn thuần vì thao tác đó không áp dụng những thay đổi schema. Dùng Testcontainers như lệnh trên; nếu muốn dùng lại database test cũ, cần có phương án nâng cấp hoặc tạo lại DB test sau khi xác nhận dữ liệu có thể bỏ. Không tự xóa database dev hoặc database khác.
 
 Lần đầu Testcontainers có thể tải image test `pgvector/pgvector:0.8.7-pg15` và Ryuk; đây là database tạm cho kiểm thử, không thay container local. CI GitHub Actions dùng JDK 21, `verify` và validator eval, không cần API key hay secret DB. Workflow đã chuẩn bị; CI trên GitHub chỉ được xác nhận sau khi thực sự chạy trên remote.
 
@@ -112,7 +114,7 @@ DB mới dùng pgvector 0.8.7/PostgreSQL 15, port loopback 5433 mặc định, p
 
 `eval/README.md` mô tả corpus 20 file tiếng Việt (`synthetic-vi-v2`) và 25 câu hỏi (`questions-vi-v3`); PDF nhúng Noto Sans. Q06–Q10 là multi_passage (nhiều đoạn, không bắt buộc nhiều tài liệu); Q21–Q25 được rà trên toàn bộ 20 tài liệu. `eval/REVIEW.md` có mọi thay đổi, lịch sử, đáp án và nguồn để duyệt; `eval/no_evidence_audit.json` lưu đối chiếu toàn corpus. Dữ liệu giữ **PENDING_REVIEW**; chưa chạy RAG/model thật và không tự tuyên bố điểm chất lượng đạt.
 
-Quyết định chi tiết: `docs/decisions/0001-local-foundation.md`. Trước Phase 2 phải chốt provider/model/số chiều; trước triển khai VPS phải chốt domain/tài nguyên. Không đưa `.env`, file upload hoặc API key vào Git.
+Quyết định chi tiết: `docs/decisions/0001-local-foundation.md`, `docs/decisions/0002-data-foundation.md`. Trước triển khai VPS phải chốt domain/tài nguyên. Không đưa `.env`, file upload hoặc API key vào Git.
 
 Các lỗi thường gặp:
 
