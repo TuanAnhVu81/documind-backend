@@ -14,7 +14,7 @@ public class OpenApiConfiguration {
     OpenAPI documindOpenApi() {
         return new OpenAPI().info(new Info().title("DocuMind Backend")
                 .version("0.0.1-SNAPSHOT")
-                .description("Phase 3: authentication. POST auth requires Origin, CSRF cookie and X-CSRF-TOKEN. Business APIs use Bearer JWT."))
+                .description("Authentication and document APIs. POST auth requires Origin, CSRF cookie and X-CSRF-TOKEN. Business APIs use Bearer JWT."))
                 .components(new Components().addSecuritySchemes("bearerAuth", new SecurityScheme()
                         .type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));

@@ -1,6 +1,4 @@
-# DocuMind Backend
 
-Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện có nền tảng local, schema/tầng dữ liệu và xác thực Phase 3; upload, worker và RAG thuộc các phase tiếp theo. Hợp đồng sản phẩm nằm ở `../PRD.md`, `../TECH_SPEC.md` và `../BE Implementation Plan.md`.
 
 ## Công nghệ và phạm vi
 
@@ -16,14 +14,14 @@ Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện c
 | Testcontainers | 2.0.5, do Spring Boot BOM quản lý |
 | Kiểm thử | JUnit 6, MockMvc, Failsafe, JaCoCo 0.8.14 |
 
-Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. Phase 3 cung cấp `/api/v1/auth/{csrf,register,login,refresh,logout}`; các API tài liệu/chat vẫn chưa triển khai. Embedding đã chọn `text-embedding-3-small` với 1.536 chiều; AI vẫn tắt. Chat model và phương án rerank chưa chọn.
+Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. API gồm `/api/v1/auth/{csrf,register,login,refresh,logout}` và `/api/v1/documents`; API chat chưa triển khai. Embedding đã chọn `text-embedding-3-small` với 1.536 chiều; AI vẫn tắt. Chat model và phương án rerank chưa chọn.
 
 ```mermaid
 flowchart LR
     Browser[Trình duyệt / Swagger] --> API[Spring Boot MVC]
     API --> Common[Security mặc định đóng / requestId / ProblemDetail]
     API --> DB[(PostgreSQL 15 + pgvector)]
-    Flyway[Flyway V1-V3: extension, schema và auth] --> DB
+    Flyway[Flyway V1-V4: extension, schema, auth và storage] --> DB
     AI[Spring AI starter: đang tắt]
 ```
 
@@ -92,6 +90,14 @@ Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự đ�
 Lỗi ứng dụng được khai báo bằng `ErrorCode` và phát sinh qua `AppException`; `GlobalExceptionHandler` chuyển lỗi thành `ProblemDetail`. Lỗi validation body có thể kèm `errors` theo tên trường với thông báo chung, không trả giá trị đã nhập. Với lỗi mới, thêm mã/status/nội dung an toàn vào `ErrorCode` rồi bổ sung kiểm thử contract. Lỗi xảy ra trong security filter dùng `SecurityProblemWriter` cùng danh mục mã lỗi, vì filter chạy trước MVC. Tránh đưa giá trị đầu vào, token hoặc chi tiết exception vào response/log.
 
 Khi thử auth bằng Swagger hoặc client cùng origin: GET `/api/v1/auth/csrf`, giữ cookie và chép `token` vào header `X-CSRF-TOKEN` cho mỗi POST auth. Register trả 201 user và chưa đăng nhập; login/refresh trả access token trong JSON và refresh cookie HttpOnly. Client cần gửi đúng Origin trong allowlist; browser tự đặt Origin. Refresh race trả 409 với Retry-After: 1 và không thay cookie; logout không cần access token còn hạn. Refresh/logout có nhiều cookie refresh cùng tên trả 400, không thay cookie. Register và login được giới hạn độc lập mặc định 10 request mỗi 60 giây cho mỗi IP trực tiếp, trong từng process; vượt giới hạn trả 429.
+
+API `/api/v1/documents` dùng Bearer JWT. POST multipart với trường `file` nhận PDF, DOCX hoặc TXT UTF-8 tối đa 10 MiB và trả 202/PENDING; GET hỗ trợ `page`, `size`, GET theo ID và DELETE theo ID. Phase này mới kiểm tra nhẹ chữ ký/cấu trúc file, chưa trích xuất nội dung, do đó tài liệu còn PENDING cho đến khi worker được triển khai. DELETE đánh dấu DELETING và xóa thông tin nguồn trong snapshot; cleanup xóa file trước metadata và tự thử lại khi filesystem lỗi. File không còn tham chiếu chỉ được dọn sau 24 giờ.
+
+`DOCUMENT_STORAGE_PATH` tùy chọn, mặc định `./uploads` theo thư mục khởi chạy; đặt thành đường dẫn volume bền vững khi triển khai. Không đưa file upload vào Git. Các giới hạn parser trong `application.yml` được cấu hình trước cho Phase 6, chưa được thực thi trong Phase 4. Outbox xóa trong database chưa thay thế nhật ký xóa bên ngoài cần có trước khi khôi phục backup.
+
+V4 tạo danh tính storage trong database. Trong profile dev, với database mới chưa có document hoặc yêu cầu xóa, lần upload đầu tạo marker `.documind-storage-id` trong thư mục storage trống. Môi trường khác mặc định không tự tạo marker: quản trị viên phải xác minh đúng volume, lấy `storage_id` từ bảng `document_storage_identity` rồi tạo marker chứa đúng UUID dạng text UTF-8 không BOM, không xuống dòng. Với storage đã có dữ liệu trước V4 cũng cần xác minh volume và file trước khi tạo marker. Cần giữ marker cùng volume khi restart và backup. Nếu marker thiếu hoặc không khớp, ứng dụng từ chối ghi/đọc/xóa file và cleanup tiếp tục retry; không tự tạo lại marker khi database đã có dữ liệu document hoặc lịch sử yêu cầu xóa. Không sao chép marker sang volume khác để bỏ qua kiểm tra. Runtime role khác chủ database cần quyền SELECT trên bảng này.
+
+Khi ghi DB thất bại, file chỉ được xóa ngay nếu transaction được xác nhận rollback; nếu không biết kết quả commit, file được giữ để quét orphan sau 24 giờ. Kiểm tra PDF/DOCX chỉ đọc cấu trúc giới hạn, không thay thế kiểm tra đầy đủ khi parser chạy ở phase sau.
 
 ## Kiểm thử
 

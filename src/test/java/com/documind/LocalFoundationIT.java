@@ -168,7 +168,7 @@ class LocalFoundationIT {
     void contextMigratesPostgresAndSupportsVectorOperationsWithoutAiCredentials() {
         assertThat(jdbc.sql("SELECT extversion FROM pg_extension WHERE extname='vector'")
                 .query(String.class).single()).isEqualTo("0.8.7");
-        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("3");
+        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("4");
         assertThat(jdbc.sql("SELECT '[1,2,3]'::vector <-> '[1,2,3]'::vector")
                 .query(Double.class).single()).isZero();
         assertThat(context.getBeansOfType(ChatModel.class)).isEmpty();

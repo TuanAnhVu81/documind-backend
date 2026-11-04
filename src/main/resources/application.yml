@@ -74,6 +74,15 @@ springdoc:
   swagger-ui:
     enabled: false
 documind:
+  storage:
+    path: ${DOCUMENT_STORAGE_PATH:./uploads}
+    cleanup-interval-ms: 30000
+    orphan-interval-ms: 3600000
+  parser:
+    max-pdf-pages: 200
+    max-code-points: 1000000
+    max-chunks: 5000
+    timeout-seconds: 30
   auth:
     jwt-secret: ${JWT_SECRET:}
     issuer: documind

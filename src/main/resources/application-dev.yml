@@ -8,5 +8,7 @@ logging:
     format:
       console: ""
 documind:
+  storage:
+    initialize-if-empty: ${DOCUMENT_STORAGE_AUTO_INITIALIZE:true}
   auth:
     allowed-origins: ${AUTH_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}
