@@ -41,3 +41,6 @@ uploads/
 .local/
 __pycache__/
 *.pyc
+
+# Local project documentation
+/docs/
