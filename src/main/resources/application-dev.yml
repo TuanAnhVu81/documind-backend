@@ -7,3 +7,6 @@ logging:
   structured:
     format:
       console: ""
+documind:
+  auth:
+    allowed-origins: ${AUTH_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}

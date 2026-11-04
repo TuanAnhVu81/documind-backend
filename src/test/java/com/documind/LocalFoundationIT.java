@@ -95,6 +95,11 @@ class LocalFoundationIT {
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry registry) throws Exception {
+        byte[] signingKey = new byte[32];
+        new java.security.SecureRandom().nextBytes(signingKey);
+        String encodedKey = java.util.Base64.getEncoder().encodeToString(signingKey);
+        registry.add("documind.auth.jwt-secret", () -> encodedKey);
+        registry.add("documind.auth.allowed-origins", () -> "http://localhost:5173");
         Properties local = new Properties();
         Path env = Path.of(".env");
         if (Files.isRegularFile(env)) {
@@ -163,7 +168,7 @@ class LocalFoundationIT {
     void contextMigratesPostgresAndSupportsVectorOperationsWithoutAiCredentials() {
         assertThat(jdbc.sql("SELECT extversion FROM pg_extension WHERE extname='vector'")
                 .query(String.class).single()).isEqualTo("0.8.7");
-        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("2");
+        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("3");
         assertThat(jdbc.sql("SELECT '[1,2,3]'::vector <-> '[1,2,3]'::vector")
                 .query(Double.class).single()).isZero();
         assertThat(context.getBeansOfType(ChatModel.class)).isEmpty();

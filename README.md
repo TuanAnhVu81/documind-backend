@@ -1,6 +1,6 @@
 # DocuMind Backend
 
-Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện có nền tảng local và schema/tầng truy cập dữ liệu Phase 2; chưa có đăng nhập, upload, worker hay RAG. Hợp đồng sản phẩm nằm ở `../PRD.md`, `../TECH_SPEC.md` và `../BE Implementation Plan.md`.
+Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện có nền tảng local, schema/tầng dữ liệu và xác thực Phase 3; upload, worker và RAG thuộc các phase tiếp theo. Hợp đồng sản phẩm nằm ở `../PRD.md`, `../TECH_SPEC.md` và `../BE Implementation Plan.md`.
 
 ## Công nghệ và phạm vi
 
@@ -16,14 +16,14 @@ Backend Java cho hệ thống hỏi đáp tài liệu có trích dẫn. Hiện c
 | Testcontainers | 2.0.5, do Spring Boot BOM quản lý |
 | Kiểm thử | JUnit 6, MockMvc, Failsafe, JaCoCo 0.8.14 |
 
-Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. Phase 2 bổ sung schema và tầng truy cập; các API nghiệp vụ vẫn chưa triển khai. Embedding đã chọn `text-embedding-3-small` với 1.536 chiều; AI vẫn tắt. Chat model và phương án rerank chưa chọn.
+Mô-đun: `auth`, `document`, `ingestion`, `retrieval`, `chat`, `usage`, `common`. Phase 3 cung cấp `/api/v1/auth/{csrf,register,login,refresh,logout}`; các API tài liệu/chat vẫn chưa triển khai. Embedding đã chọn `text-embedding-3-small` với 1.536 chiều; AI vẫn tắt. Chat model và phương án rerank chưa chọn.
 
 ```mermaid
 flowchart LR
     Browser[Trình duyệt / Swagger] --> API[Spring Boot MVC]
     API --> Common[Security mặc định đóng / requestId / ProblemDetail]
     API --> DB[(PostgreSQL 15 + pgvector)]
-    Flyway[Flyway V1-V2: extension và schema] --> DB
+    Flyway[Flyway V1-V3: extension, schema và auth] --> DB
     AI[Spring AI starter: đang tắt]
 ```
 
@@ -54,7 +54,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy/postgres/setup-local.
 
 Setup tạo role `documind` với mật khẩu ngẫu nhiên, hai database `documind` và `documind_phase1_test`, rồi lưu `.env` bị Git bỏ qua. Script không ghi đè role/database đã tồn tại nếu chưa có `.env`, và không in credential. Nếu `.env` đã có, script giữ nguyên; có thể điền thủ công theo `.env.example` khi container dùng password file hoặc cấu hình khác.
 
+Trước khi chạy app Phase 3, tạo khóa ký local một lần (script giữ khóa hiện có):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File deploy/setup-auth-local.ps1
+```
+
+`JWT_SECRET` là Base64 của ít nhất 32 byte ngẫu nhiên, chỉ lưu trong `.env` bị Git bỏ qua. Ngoài profile dev, phải cấu hình `AUTH_ALLOWED_ORIGINS` rõ ràng. Dev mặc định chấp nhận Origin `http://localhost:5173` và `http://localhost:8080`; frontend gọi `/api` qua Vite proxy. Nếu chạy local trên port khác, cập nhật Origin tương ứng. Cookie chỉ bỏ Secure khi dev là profile duy nhất và mọi Origin được phép đều là HTTP local.
+
 Ứng dụng tự đọc `.env` theo cú pháp Java properties; không cần export mật khẩu ra terminal. Runtime dùng role `documind`; Flyway dùng tài khoản migration riêng. Migration V2 cấp quyền dữ liệu cho chủ database; nếu runtime dùng role khác chủ database thì quản trị viên phải cấp quyền SELECT/INSERT/UPDATE/DELETE tương ứng. Không dùng tài khoản superuser làm runtime production.
+
+V3 chuẩn hóa email người dùng đã có. Nếu nhiều tài khoản trùng email sau chuẩn hóa, migration dừng và rollback; cần xử lý dữ liệu trùng thủ công trước khi chạy lại, không tự gộp tài khoản.
 
 Một lệnh khởi chạy app sau setup: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` trên Linux/macOS, hoặc lệnh PowerShell ở trên. Có thể chạy JAR sau `verify`:
 
@@ -64,18 +74,24 @@ java -jar target/documind-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=de
 
 ## Endpoint và profile
 
-| URL local | Kết quả Phase 1 |
+| URL local | Kết quả hiện tại |
 |---|---|
 | `http://localhost:8080/actuator/health` | Health tối thiểu, không lộ chi tiết DB |
 | `http://localhost:8080/actuator/health/liveness` | Trạng thái tiến trình |
 | `http://localhost:8080/actuator/health/readiness` | Gồm readiness state, DB và pgvector |
 | `http://localhost:8080/swagger-ui/index.html` | Swagger UI ở dev/test |
-| `http://localhost:8080/v3/api-docs` | Tài liệu OpenAPI ở dev/test; chưa có API nghiệp vụ |
-| `/api/v1/**` | Mặc định đóng, trả lỗi ProblemDetail; auth thật làm ở Phase 3 |
+| `http://localhost:8080/v3/api-docs` | Tài liệu OpenAPI ở dev/test, gồm auth |
+| `/api/v1/auth/csrf` | GET bootstrap CSRF, không cần JWT |
+| `/api/v1/auth/{register,login,refresh,logout}` | POST cần Origin và signed double-submit CSRF |
+| Các `/api/v1/**` khác | Cần Bearer JWT; tài liệu/chat chưa có controller |
 
 `dev`: Swagger bật. `test`: DB test riêng hoặc Testcontainers. `prod`: Swagger tắt, shutdown graceful, không có secret/default credential. Không chỉ định profile vẫn giữ Security đóng và Swagger tắt. Health liveness không thay thế readiness.
 
-Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự được giữ, giá trị không an toàn được thay UUID. Log JSON có requestId, method/path/status/duration; không ghi body/query string, token hoặc mật khẩu. Lỗi thông thường/security có `code` và `requestId`, không lộ stack trace. POST chưa triển khai vẫn bị CSRF/Security chặn; chưa có `/auth` trong Phase 1.
+Mỗi request nhận `X-Request-ID`; header hợp lệ tối đa 64 ký tự được giữ, giá trị không an toàn được thay UUID. JSON logging có requestId, method/path/status/duration; dev dùng log console dễ đọc. Không ghi body/query string, token hoặc mật khẩu. Lỗi thông thường/security có `code` và `requestId`, không lộ stack trace. Auth trả `Cache-Control: no-store`; API chỉ dùng Bearer không đòi CSRF.
+
+Lỗi ứng dụng được khai báo bằng `ErrorCode` và phát sinh qua `AppException`; `GlobalExceptionHandler` chuyển lỗi thành `ProblemDetail`. Lỗi validation body có thể kèm `errors` theo tên trường với thông báo chung, không trả giá trị đã nhập. Với lỗi mới, thêm mã/status/nội dung an toàn vào `ErrorCode` rồi bổ sung kiểm thử contract. Lỗi xảy ra trong security filter dùng `SecurityProblemWriter` cùng danh mục mã lỗi, vì filter chạy trước MVC. Tránh đưa giá trị đầu vào, token hoặc chi tiết exception vào response/log.
+
+Khi thử auth bằng Swagger hoặc client cùng origin: GET `/api/v1/auth/csrf`, giữ cookie và chép `token` vào header `X-CSRF-TOKEN` cho mỗi POST auth. Register trả 201 user và chưa đăng nhập; login/refresh trả access token trong JSON và refresh cookie HttpOnly. Client cần gửi đúng Origin trong allowlist; browser tự đặt Origin. Refresh race trả 409 với Retry-After: 1 và không thay cookie; logout không cần access token còn hạn. Refresh/logout có nhiều cookie refresh cùng tên trả 400, không thay cookie. Register và login được giới hạn độc lập mặc định 10 request mỗi 60 giây cho mỗi IP trực tiếp, trong từng process; vượt giới hạn trả 429.
 
 ## Kiểm thử
 

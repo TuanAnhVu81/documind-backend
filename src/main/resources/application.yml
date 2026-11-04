@@ -62,6 +62,7 @@ management:
 logging:
   level:
     root: INFO
+    org.hibernate.orm.jdbc.error: "OFF"
   threshold:
     console: INFO
   structured:
@@ -72,3 +73,11 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+documind:
+  auth:
+    jwt-secret: ${JWT_SECRET:}
+    issuer: documind
+    allowed-origins: ${AUTH_ALLOWED_ORIGINS:}
+    login-max-attempts: 10
+    register-max-attempts: 10
+    login-window-seconds: 60
