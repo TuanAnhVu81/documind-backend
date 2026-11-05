@@ -10,6 +10,8 @@ spring:
     hikari:
       maximum-pool-size: 5
       connection-timeout: 10000
+      data-source-properties:
+        socketTimeout: ${DB_SOCKET_TIMEOUT_SECONDS:15}
   jpa:
     open-in-view: false
     hibernate:
@@ -41,6 +43,10 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  task:
+    scheduling:
+      pool:
+        size: 3
 server:
   port: ${SERVER_PORT:8080}
   error:
@@ -74,6 +80,15 @@ springdoc:
   swagger-ui:
     enabled: false
 documind:
+  ingestion:
+    worker-enabled: false
+    poll-ms: 2000
+    concurrency: 2
+    lease-seconds: 120
+    heartbeat-seconds: 20
+    recovery-ms: 30000
+    deadline-seconds: 600
+    stop-grace-seconds: 10
   storage:
     path: ${DOCUMENT_STORAGE_PATH:./uploads}
     cleanup-interval-ms: 30000
