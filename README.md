@@ -2,7 +2,7 @@
 
 DocuMind là dự án hỏi đáp tài liệu có trích dẫn nguồn. Backend được xây dựng bằng Java và Spring Boot, sử dụng PostgreSQL cùng pgvector để lưu dữ liệu và hỗ trợ tìm kiếm tài liệu.
 
-Dự án đang phát triển. Hiện đã có xác thực, quản lý tài liệu và hàng đợi xử lý; pipeline trích xuất, embedding và hỏi đáp bằng AI chưa hoàn thiện. AI và worker xử lý tài liệu đang tắt, không cần API key để chạy local.
+Dự án đang phát triển. Hiện đã có xác thực, quản lý tài liệu, hàng đợi và pipeline trích xuất/embedding; chức năng hỏi đáp bằng AI chưa hoàn thiện. AI và worker xử lý tài liệu đang tắt, không cần API key để chạy local.
 
 ## Công nghệ
 
@@ -43,7 +43,7 @@ Sau khi chạy, mở [Swagger UI](http://localhost:8080/swagger-ui/index.html) h
 - `/api/v1/auth`: đăng ký, đăng nhập, làm mới và đăng xuất; POST auth dùng Origin và CSRF token.
 - `/api/v1/documents`: tải lên, xem danh sách/chi tiết và yêu cầu xóa tài liệu. API sử dụng Bearer token; hỗ trợ PDF, DOCX và TXT tối đa 10 MiB.
 
-Tài liệu mới ở trạng thái `PENDING` cho đến khi pipeline xử lý được triển khai.
+Tài liệu mới ở trạng thái `PENDING` khi worker và embedding còn tắt.
 
 ## Kiểm thử
 

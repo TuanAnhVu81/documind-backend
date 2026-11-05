@@ -22,6 +22,12 @@ spring:
     user: ${DB_MIGRATION_USERNAME:${DB_USERNAME}}
     password: ${DB_MIGRATION_PASSWORD:${DB_PASSWORD}}
   ai:
+    openai:
+      embedding:
+        max-retries: 0
+        timeout: 60s
+        model: text-embedding-3-small
+        dimensions: 1536
     # Phase 1 deliberately starts without a provider account or API key.
     model:
       chat: none
@@ -82,6 +88,12 @@ springdoc:
 documind:
   ingestion:
     worker-enabled: false
+    pipeline-enabled: false
+    embedding-model: text-embedding-3-small
+    embedding-batch-size: 32
+    embedding-timeout-seconds: 60
+    chunk-size: 1000
+    chunk-overlap: 150
     poll-ms: 2000
     concurrency: 2
     lease-seconds: 120

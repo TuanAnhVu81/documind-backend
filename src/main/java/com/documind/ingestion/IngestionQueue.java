@@ -100,13 +100,17 @@ public class IngestionQueue {
     }
 
     public boolean fail(JobClaimStore.Claim claim, boolean retryable, Duration retryAfter) {
+        return fail(claim, retryable, retryAfter, "INGESTION_FAILED");
+    }
+
+    public boolean fail(JobClaimStore.Claim claim, boolean retryable, Duration retryAfter, String code) {
         Boolean changed = shortTx.execute(status -> {
             Optional<Locked> found = lock(claim.documentId(), claim.id());
             if (found.isEmpty() || !valid(found.get(), claim, now())) return false;
             Locked state = found.get();
             if ("DELETING".equals(state.documentStatus())) { cancel(state.jobId()); return true; }
             if (!"PROCESSING".equals(state.documentStatus())) return false;
-            transitionFailure(state, retryable, retryAfter, now());
+            transitionFailure(state, retryable, retryAfter, now(), code);
             return true;
         });
         return Boolean.TRUE.equals(changed);
@@ -142,11 +146,11 @@ public class IngestionQueue {
             if (!"PROCESSING".equals(state.jobStatus()) || state.leaseUntil() == null || state.leaseUntil().isAfter(time)) return;
             if ("DELETING".equals(state.documentStatus())) cancel(state.jobId());
             else if ("PROCESSING".equals(state.documentStatus()) || "PENDING".equals(state.documentStatus()))
-                transitionFailure(state, true, null, time);
+                transitionFailure(state, true, null, time, "INGESTION_FAILED");
         });
     }
 
-    private void transitionFailure(Locked state, boolean retryable, Duration retryAfter, Instant time) {
+    private void transitionFailure(Locked state, boolean retryable, Duration retryAfter, Instant time, String code) {
         boolean retry = retryable && state.attempts() < MAX_ATTEMPTS;
         long base = state.attempts() <= 1 ? 10 : 30;
         long delayMillis = base * 1000 + ThreadLocalRandom.current().nextLong(base * 200 + 1);
@@ -157,9 +161,30 @@ public class IngestionQueue {
             """).param("status", retry ? "PENDING" : "FAILED").param("next", sqlTime(time.plusMillis(delayMillis)))
                 .param("id", state.jobId()).update();
         jdbc.sql("UPDATE documents SET status=:status,error_code=:code,error_message=:message WHERE id=:id")
-                .param("status", retry ? "PENDING" : "FAILED").param("code", retry ? "INGESTION_RETRY" : "INGESTION_FAILED")
-                .param("message", retry ? "Document processing will be retried." : "Document processing failed.")
+                .param("status", retry ? "PENDING" : "FAILED").param("code", retry ? "INGESTION_RETRY" : safeCode(code))
+                .param("message", retry ? "Document processing will be retried." : safeMessage(code))
                 .param("id", state.documentId()).update();
+    }
+
+    private static String safeMessage(String code) {
+        return switch (safeCode(code)) {
+            case "NO_EXTRACTABLE_TEXT" -> "No text could be extracted; scanned documents require OCR, which is not supported.";
+            case "PDF_PAGE_LIMIT" -> "PDF exceeds the page limit.";
+            case "TEXT_LIMIT" -> "Document exceeds the text limit.";
+            case "DOCX_RESOURCE_LIMIT" -> "DOCX exceeds the archive resource limit.";
+            case "CHUNK_LIMIT" -> "Document exceeds the chunk limit.";
+            case "INVALID_TEXT_ENCODING" -> "Text must use UTF-8 encoding.";
+            case "INVALID_DOCUMENT" -> "Document is damaged or cannot be read.";
+            case "PARSER_TIMEOUT" -> "Document parsing timed out.";
+            case "EMBEDDING_INVALID" -> "Embedding response is invalid.";
+            default -> "Document processing failed.";
+        };
+    }
+
+    private static String safeCode(String code) {
+        return code != null && java.util.Set.of("PDF_PAGE_LIMIT", "TEXT_LIMIT", "DOCX_RESOURCE_LIMIT", "CHUNK_LIMIT", "NO_EXTRACTABLE_TEXT",
+                "INVALID_DOCUMENT", "INVALID_TEXT_ENCODING", "UNSUPPORTED_DOCUMENT", "PARSER_TIMEOUT",
+                "EMBEDDING_INVALID", "INGESTION_FAILED").contains(code) ? code : "INGESTION_FAILED";
     }
 
     private void cancel(UUID job) {

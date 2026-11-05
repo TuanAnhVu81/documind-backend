@@ -119,7 +119,7 @@ public class IngestionWorker {
                 if (!completed && !task.allowed()) cancel(task);
             } else cancel(task);
         } catch (IngestionProcessor.ProcessingFailure failure) {
-            if (task.allowed()) queue.fail(task.claim, failure.retryable(), failure.retryAfter());
+            if (task.allowed()) queue.fail(task.claim, failure.retryable(), failure.retryAfter(), failure.code());
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
         } catch (Exception failure) {
