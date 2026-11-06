@@ -33,6 +33,12 @@ public class RagAnswerEngine {
 
     public Answer answer(String originalQuestion, String standaloneQuestion, List<ChunkVectorStore.Hit> hits,
                          String noEvidenceText, String invalidCitationText, ChatProvider provider) {
+        return answer(originalQuestion, standaloneQuestion, hits, noEvidenceText, invalidCitationText, provider, ignored -> {});
+    }
+
+    public Answer answer(String originalQuestion, String standaloneQuestion, List<ChunkVectorStore.Hit> hits,
+                         String noEvidenceText, String invalidCitationText, ChatProvider provider,
+                         java.util.function.Consumer<String> tokens) {
         if (originalQuestion == null || originalQuestion.isBlank() || standaloneQuestion == null || standaloneQuestion.isBlank()
                 || hits == null || noEvidenceText == null || invalidCitationText == null) throw new IllegalArgumentException("Invalid RAG input");
         if (hits.isEmpty()) return new Answer("NO_EVIDENCE", noEvidenceText, List.of(), List.of());
@@ -55,7 +61,7 @@ public class RagAnswerEngine {
         var context = json.writeValueAsString(Map.of("originalQuestion", originalQuestion, "standaloneQuestion", standaloneQuestion,
                 "sources", sources.values()));
         var calls = new ArrayList<ChatProvider.Reply>();
-        var first = provider.complete(SYSTEM, context); calls.add(first);
+        var first = provider.stream(SYSTEM, context, tokens); calls.add(first);
         if (first.text().getBytes(StandardCharsets.UTF_8).length > MAX_RESPONSE_BYTES) throw new GeminiChatProvider.ProviderException();
         if ("NO_EVIDENCE".equals(first.text().strip()))
             return new Answer("NO_EVIDENCE", noEvidenceText, List.of(), List.copyOf(calls));

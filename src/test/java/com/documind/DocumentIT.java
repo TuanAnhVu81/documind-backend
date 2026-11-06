@@ -61,7 +61,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(DocumentIT.Config.class)
@@ -78,6 +78,11 @@ class DocumentIT {
     @Autowired FailingStorage storage;
     @Autowired ConversationService conversations;
     @Autowired ChatTurnService actualChat;
+    @Autowired com.documind.chat.GenerationRecovery generationRecovery;
+    @Autowired com.documind.chat.ChatAdmissionService chatAdmission;
+    @Autowired com.documind.chat.GenerationLifecycle generationLifecycle;
+    @Autowired TestChatProvider testChatProvider;
+    @org.springframework.boot.test.web.server.LocalServerPort int serverPort;
     @Autowired DocumentService documents;
     @Autowired QueryResolver queryResolver;
     @Autowired RagAnswerEngine answerEngine;
@@ -108,6 +113,31 @@ class DocumentIT {
     @TestConfiguration(proxyBeanMethods = false)
     static class Config {
         @Bean @Primary FailingStorage failingStorage(LocalFileStorage delegate) { return new FailingStorage(delegate); }
+        @Bean TestChatProvider testChatProvider() { return new TestChatProvider(); }
+        @Bean org.springframework.ai.embedding.EmbeddingModel testEmbedding() {
+            var fake = org.mockito.Mockito.mock(org.springframework.ai.embedding.EmbeddingModel.class);
+            float[] vector = new float[1536]; java.util.Arrays.fill(vector, 1);
+            org.mockito.Mockito.when(fake.embedForResponse(org.mockito.ArgumentMatchers.anyList()))
+                    .thenReturn(new org.springframework.ai.embedding.EmbeddingResponse(List.of(new org.springframework.ai.embedding.Embedding(vector, 0))));
+            return fake;
+        }
+    }
+
+    static class TestChatProvider implements ChatProvider {
+        volatile java.util.concurrent.CountDownLatch emitted = new java.util.concurrent.CountDownLatch(1);
+        volatile java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(0);
+        volatile boolean floodAfterRelease;
+        volatile String provisional = "Uncited.";
+        final java.util.concurrent.atomic.AtomicInteger completeCalls = new java.util.concurrent.atomic.AtomicInteger();
+        @Override public Reply complete(String system, String input) { completeCalls.incrementAndGet(); return new Reply("Repaired [S1].", 2L, 1L); }
+        @Override public Reply stream(String system, String input, java.util.function.Consumer<String> tokens) {
+            tokens.accept(provisional); emitted.countDown();
+            try { if (!release.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("test timed out"); }
+            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IllegalStateException(interrupted); }
+            if (floodAfterRelease) for (int i = 0; i < 50; i++) tokens.accept("x".repeat(2048));
+            return new Reply(provisional, 2L, 1L);
+        }
+        void reset() { emitted = new java.util.concurrent.CountDownLatch(1); release = new java.util.concurrent.CountDownLatch(0); floodAfterRelease = false; provisional = "Uncited."; completeCalls.set(0); }
     }
 
     static class FailingStorage implements FileStorage {
@@ -128,6 +158,7 @@ class DocumentIT {
     }
 
     @BeforeEach void prepare() throws IOException {
+        testChatProvider.reset();
         storage.failDelete.set(false);
         storage.failStore.set(false);
         jdbc.sql("TRUNCATE users CASCADE").update();
@@ -204,6 +235,265 @@ class DocumentIT {
         assertThat(jdbc.sql("SELECT count(*) FROM usage_logs").query(Long.class).single()).isZero();
     }
 
+    @Test void admissionReplayDoesNotCreateAnotherGenerationOrUseProvider() throws Exception {
+        UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var first = chatAdmission.admit(owner, conversation, key, request);
+        assertThat(first.started()).isNotNull();
+        assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, request))
+                .isInstanceOf(com.documind.chat.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                        .isEqualTo(com.documind.common.error.ErrorCode.GENERATION_IN_PROGRESS));
+        mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
+                .header("Idempotency-Key", key).contentType("application/json").accept("text/event-stream")
+                .content("{\"content\":\"Question?\"}"))
+                .andExpect(status().isConflict()).andExpect(header().string("Retry-After", "1"))
+                .andExpect(jsonPath("$.code").value("GENERATION_IN_PROGRESS"))
+                .andExpect(jsonPath("$.generationId").value(first.started().generation().toString()));
+        var result = actualChat.execute(owner, first.started(), request.content(), request.scope(), request.documentIds());
+        assertThat(result.outcome()).isEqualTo("NO_EVIDENCE");
+        assertThat(generationLifecycle.snapshot(owner, conversation, first.started().assistant()).message().outcome()).isEqualTo("NO_EVIDENCE");
+        var replay = chatAdmission.admit(owner, conversation, key, request);
+        assertThat(replay.replay().generation()).isEqualTo(first.started().generation());
+        var changed = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Changed?\"}"), json);
+        assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, changed))
+                .isInstanceOf(com.documind.chat.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                        .isEqualTo(com.documind.common.error.ErrorCode.IDEMPOTENCY_KEY_REUSED));
+        assertThatThrownBy(() -> chatAdmission.admit(other, conversation, key, request)).isInstanceOf(com.documind.common.error.AppException.class);
+        assertThat(jdbc.sql("SELECT count(*) FROM chat_generations").query(Long.class).single()).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT count(*) FROM usage_logs").query(Long.class).single()).isZero();
+    }
+
+    @Test void directPhaseEightTurnUsesSameCanonicalHashAsSseAdmission() {
+        UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
+        actualChat.process(owner, conversation, key, "Question?", RetrievalService.Scope.ALL_READY, null);
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        assertThat(chatAdmission.admit(owner, conversation, key, request).replay()).isNotNull();
+        var legacy = new java.util.LinkedHashMap<String, Object>();
+        legacy.put("documentIds", List.of()); legacy.put("scope_mode", "ALL_READY"); legacy.put("content", "Question?");
+        try {
+            String legacyHash = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(json.writeValueAsBytes(legacy)));
+            jdbc.sql("UPDATE chat_generations SET request_hash=:hash WHERE conversation_id=:conversation")
+                    .param("hash", legacyHash).param("conversation", conversation).update();
+        } catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
+        assertThat(chatAdmission.admit(owner, conversation, key, request).replay()).isNotNull();
+    }
+
+    @Test void sseCommitsThenReplaysWithoutDuplicatingGeneration() throws Exception {
+        UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
+        String path = "/api/v1/conversations/" + conversation + "/messages";
+        var first = mvc.perform(post(path).header("Authorization", bearer(owner)).header("Idempotency-Key", key)
+                .contentType("application/json").accept("text/event-stream").content("{\"content\":\"What?\"}"))
+                .andExpect(request().asyncStarted()).andExpect(header().string("Cache-Control", "no-store")).andReturn();
+        var response = mvc.perform(asyncDispatch(first)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(response).contains("event:start", "event:sources", "event:done", "\"replayed\":false", "NO_EVIDENCE")
+                .doesNotContain("event:error");
+        var replay = mvc.perform(post(path).header("Authorization", bearer(owner)).header("Idempotency-Key", key)
+                .contentType("application/json").accept("text/event-stream").content("{\"content\":\"What?\"}"))
+                .andExpect(status().isOk()).andReturn();
+        var replayed = replay.getResponse().getContentAsString();
+        assertThat(replayed).contains("event:start", "event:token", "event:sources", "event:done", "\"replayed\":true");
+        assertThat(jdbc.sql("SELECT count(*) FROM chat_generations").query(Long.class).single()).isEqualTo(1);
+        mvc.perform(post(path).header("Authorization", bearer(owner)).header("Idempotency-Key", key)
+                .contentType("application/json").accept("text/event-stream").content("{\"content\":\"Different?\"}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("IDEMPOTENCY_KEY_REUSED"));
+        mvc.perform(post(path).header("Authorization", bearer(other)).header("Idempotency-Key", key)
+                .contentType("application/json").accept("text/event-stream").content("{\"content\":\"What?\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test void sseStreamsTemporaryAnswerAndBuffersCitationRepair() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,
+                  content,embedding,embedding_model,pipeline_version)
+                VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
+                """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
+                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+        UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
+        testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
+        testChatProvider.provisional = "Điều kiện.";
+        var result = mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
+                .header("Idempotency-Key", key).contentType("application/json").accept("text/event-stream")
+                .content("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"))
+                .andExpect(request().asyncStarted()).andReturn();
+        try {
+            assertThat(testChatProvider.emitted.await(10, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8)).contains("event:token", "Điều kiện.").doesNotContain("event:done");
+        } finally { testChatProvider.release.countDown(); }
+        var response = mvc.perform(asyncDispatch(result)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(response).contains("event:sources", "event:done", "Repaired [S1].");
+        assertThat(response.indexOf("Điều kiện.")).isLessThan(response.indexOf("event:sources"));
+        assertThat(response.indexOf("Repaired [S1].")).isGreaterThan(response.indexOf("event:done"));
+        documents.requestDeletion(owner, document);
+        var replay = mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
+                .header("Idempotency-Key", key).contentType("application/json").accept("text/event-stream")
+                .content("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"))
+                .andExpect(status().isOk()).andReturn();
+        String replayed = replay.getResponse().getContentAsString();
+        assertThat(replayed).contains("\"replayed\":true", "\"availability\":\"DELETED\"", "\"snippet\":null")
+                .doesNotContain("\"snippet\":\"fact\"");
+    }
+
+    @Test void incompleteGenerationCannotReplayAndNewKeyCanRetry() {
+        UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var accepted = chatAdmission.admit(owner, conversation, key, request);
+        assertThat(generationLifecycle.terminate(accepted.started().generation(), 0, "CLIENT_DISCONNECTED", "partial")).isTrue();
+        assertThat(generationLifecycle.terminate(accepted.started().generation(), 0, "TIMEOUT", "wrong")).isFalse();
+        assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, request))
+                .isInstanceOf(com.documind.chat.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                        .isEqualTo(com.documind.common.error.ErrorCode.GENERATION_NOT_REPLAYABLE));
+        assertThat(chatAdmission.admit(owner, conversation, UUID.randomUUID(), request).started()).isNotNull();
+        var message = conversations.messages(owner, conversation, null, 50).items().get(1);
+        assertThat(message.status()).isEqualTo("INCOMPLETE");
+        assertThat(message.content()).isEqualTo("partial");
+        assertThat(message.sources().isEmpty()).isTrue();
+    }
+
+    @Test void deletingSourceDuringSseDiscardsPartialAndDoesNotSendDone() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,
+                  content,embedding,embedding_model,pipeline_version)
+                VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
+                """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
+                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+        UUID conversation = conversations.create(owner, null).id();
+        testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
+        var result = mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
+                .header("Idempotency-Key", UUID.randomUUID()).contentType("application/json").accept("text/event-stream")
+                .content("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"))
+                .andExpect(request().asyncStarted()).andReturn();
+        String response;
+        try {
+            assertThat(testChatProvider.emitted.await(10, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            documents.requestDeletion(owner, document);
+            response = mvc.perform(asyncDispatch(result)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        } finally { testChatProvider.release.countDown(); }
+        assertThat(response).contains("event:error", "SOURCE_DELETED", "\"discardPartial\":true").doesNotContain("event:done");
+        var message = conversations.messages(owner, conversation, null, 50).items().getLast();
+        assertThat(message.outcome()).isEqualTo("SOURCE_DELETED");
+        assertThat(message.content()).isEmpty();
+        assertThat(jdbc.sql("SELECT count(*) FROM usage_logs WHERE operation='CHAT_CITATION_REPAIR'").query(Long.class).single()).isZero();
+    }
+
+    @Test void closingRealHttpStreamFencesAndPersistsIncompleteGeneration() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,
+                  content,embedding,embedding_model,pipeline_version)
+                VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
+                """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
+                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+        UUID conversation = conversations.create(owner, null).id();
+        testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
+        testChatProvider.floodAfterRelease = true;
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + serverPort + "/api/v1/conversations/" + conversation + "/messages"))
+                .header("Authorization", bearer(owner)).header("Idempotency-Key", UUID.randomUUID().toString())
+                .header("Content-Type", "application/json").header("Accept", "text/event-stream")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"))
+                .build();
+        try (var client = HttpClient.newHttpClient()) {
+            var response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            assertThat(response.statusCode()).isEqualTo(200);
+            try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(response.body(), StandardCharsets.UTF_8))) {
+                String line;
+                do { line = reader.readLine(); } while (line != null && !line.equals("event:token"));
+                assertThat(line).isEqualTo("event:token");
+            } finally { testChatProvider.release.countDown(); }
+            String state = null;
+            for (int i = 0; i < 80; i++) {
+                state = jdbc.sql("SELECT status FROM chat_generations WHERE conversation_id=:c").param("c", conversation).query(String.class).single();
+                if (!"GENERATING".equals(state)) break;
+                Thread.sleep(100);
+            }
+            assertThat(state).isEqualTo("INCOMPLETE");
+            var message = conversations.messages(owner, conversation, null, 50).items().getLast();
+            assertThat(message.outcome()).isEqualTo("CLIENT_DISCONNECTED");
+            assertThat(message.sources().isEmpty()).isTrue();
+        }
+    }
+
+    @Test void deadlineStopsGenerationAndPreservesOnlyTemporaryText() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,
+                  content,embedding,embedding_model,pipeline_version)
+                VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
+                """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
+                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+        UUID conversation = conversations.create(owner, null).id();
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"), json);
+        var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
+        testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
+        var service = new com.documind.chat.ChatStreamService(actualChat, generationLifecycle, 50, 1_500, json);
+        try {
+            service.open(owner, conversation, request, accepted, "timeout-test");
+            assertThat(testChatProvider.emitted.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            String state = null;
+            for (int i = 0; i < 60; i++) {
+                state = jdbc.sql("SELECT status FROM chat_generations WHERE id=:id").param("id", accepted.started().generation()).query(String.class).single();
+                if (!"GENERATING".equals(state)) break;
+                Thread.sleep(100);
+            }
+            assertThat(state).isEqualTo("INCOMPLETE");
+            assertThat(jdbc.sql("SELECT heartbeat_at > created_at FROM chat_generations WHERE id=:id")
+                    .param("id", accepted.started().generation()).query(Boolean.class).single()).isTrue();
+            var message = conversations.messages(owner, conversation, null, 50).items().getLast();
+            assertThat(message.outcome()).isEqualTo("TIMEOUT");
+            assertThat(message.content()).isEqualTo("Uncited.");
+            assertThat(message.sources().isEmpty()).isTrue();
+        } finally { testChatProvider.release.countDown(); service.shutdown(); }
+    }
+
+    @Test void concurrentAdmissionNeverAcceptsMoreThanTwentyPerUser() throws Exception {
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var conversations = new java.util.ArrayList<UUID>();
+        for (int i = 0; i < 30; i++) conversations.add(this.conversations.create(owner, null).id());
+        var accepted = new java.util.concurrent.atomic.AtomicInteger();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(8)) {
+            var tasks = conversations.stream().<java.util.concurrent.Callable<Void>>map(id -> () -> {
+                try { chatAdmission.admit(owner, id, UUID.randomUUID(), request); accepted.incrementAndGet(); }
+                catch (com.documind.chat.ChatRateLimiter.Limited ignored) { }
+                return null;
+            }).toList();
+            for (var future : pool.invokeAll(tasks)) future.get();
+        }
+        assertThat(accepted.get()).isEqualTo(20);
+        assertThat(jdbc.sql("SELECT count(*) FROM question_events WHERE user_id=:owner").param("owner", owner).query(Long.class).single()).isEqualTo(20);
+    }
+
+    @Test void replayBypassesFullRateLimitWithoutCreatingAnotherQuestion() throws Exception {
+        UUID conversation = conversations.create(owner, null).id();
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        UUID firstKey = UUID.randomUUID();
+        for (int i = 0; i < 20; i++) {
+            var accepted = chatAdmission.admit(owner, conversation, i == 0 ? firstKey : UUID.randomUUID(), request);
+            actualChat.execute(owner, accepted.started(), request.content(), request.scope(), request.documentIds());
+        }
+        assertThat(chatAdmission.admit(owner, conversation, firstKey, request).replay()).isNotNull();
+        assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, UUID.randomUUID(), request))
+                .isInstanceOf(com.documind.chat.ChatRateLimiter.Limited.class);
+        mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
+                .header("Idempotency-Key", UUID.randomUUID()).contentType("application/json").accept("text/event-stream")
+                .content("{\"content\":\"Question?\"}"))
+                .andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"))
+                .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
+        assertThat(jdbc.sql("SELECT count(*) FROM question_events WHERE user_id=:owner").param("owner", owner).query(Long.class).single()).isEqualTo(20);
+    }
+
     @Test void realVectorRetrievalEnforcesOwnerAndSelectedScopeInChat() throws Exception {
         UUID first = upload(), second = upload(), foreign = UUID.randomUUID();
         jdbc.sql("UPDATE documents SET status='READY' WHERE id IN (:first,:second)").param("first", first).param("second", second).update();
@@ -272,6 +562,8 @@ class DocumentIT {
         UUID conversation = conversations.create(owner, null).id();
         var chat = chatService(document, (system, input) -> {
             documents.requestDeletion(owner, document);
+            assertThat(jdbc.sql("SELECT status FROM chat_generations WHERE conversation_id=:id").param("id", conversation)
+                    .query(String.class).single()).isEqualTo("INCOMPLETE");
             return new ChatProvider.Reply("Fact [S1].", 5L, 2L);
         });
         var result = chat.process(owner, conversation, UUID.randomUUID(), "Question?", RetrievalService.Scope.SELECTED,
@@ -281,6 +573,20 @@ class DocumentIT {
         var message = conversations.messages(owner, conversation, null, 50).items().getLast();
         assertThat(message.content()).isEmpty();
         assertThat(message.sources().isEmpty()).isTrue();
+    }
+
+    @Test void staleGenerationRecoveryFencesLateWorker() {
+        UUID conversation = conversations.create(owner, null).id(), userMessage = UUID.randomUUID(), assistant = UUID.randomUUID(), generation = UUID.randomUUID();
+        jdbc.sql("INSERT INTO messages(id,conversation_id,ordinal,role,status) VALUES (:id,:c,0,'USER','COMPLETE'),(:assistant,:c,1,'ASSISTANT','GENERATING')")
+                .param("id", userMessage).param("assistant", assistant).param("c", conversation).update();
+        jdbc.sql("""
+                INSERT INTO chat_generations(id,conversation_id,user_message_id,assistant_message_id,request_key,request_hash,scope_mode,status,heartbeat_at)
+                VALUES (:id,:c,:u,:a,:key,'hash','ALL_READY','GENERATING',now()-interval '90 seconds')
+                """).param("id", generation).param("c", conversation).param("u", userMessage).param("a", assistant).param("key", UUID.randomUUID()).update();
+        generationRecovery.recover();
+        assertThat(jdbc.sql("SELECT outcome FROM chat_generations WHERE id=:id").param("id", generation).query(String.class).single()).isEqualTo("TIMEOUT");
+        assertThat(jdbc.sql("SELECT generation_version FROM chat_generations WHERE id=:id").param("id", generation).query(Long.class).single()).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT outcome FROM messages WHERE id=:id").param("id", assistant).query(String.class).single()).isEqualTo("TIMEOUT");
     }
 
     @Test void sourceBecomingUnavailableBeforeRetrievalIsNotProviderError() throws Exception {
@@ -347,6 +653,88 @@ class DocumentIT {
         assertThat(conversations.messages(owner, conversation, null, 50).items()).hasSize(4);
     }
 
+    @Test void deletionAfterAdmissionFencesHistoryBeforeResolverCallsProvider() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        UUID conversation = conversations.create(owner, null).id();
+        var first = chatService(document, (system, input) -> new ChatProvider.Reply("Secret [S1].", 1L, 1L));
+        assertThat(first.process(owner, conversation, UUID.randomUUID(), "First?", RetrievalService.Scope.SELECTED,
+                List.of(document)).outcome()).isEqualTo("ANSWER");
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
+        var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
+        documents.requestDeletion(owner, document);
+        assertThat(generationLifecycle.state(accepted.started().generation()).outcome()).isEqualTo("SOURCE_DELETED");
+        assertThatThrownBy(() -> actualChat.execute(owner, accepted.started(), request.content(), request.scope(), request.documentIds()))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(testChatProvider.completeCalls.get()).isZero();
+    }
+
+    @Test void deletionBeforeProviderSubmissionPreventsSendingHistory() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        UUID conversation = conversations.create(owner, null).id();
+        var first = chatService(document, (system, input) -> new ChatProvider.Reply("Secret [S1].", 1L, 1L));
+        first.process(owner, conversation, UUID.randomUUID(), "First?", RetrievalService.Scope.SELECTED, List.of(document));
+        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
+        var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
+        var entered = new java.util.concurrent.CountDownLatch(1);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        var sent = new java.util.concurrent.atomic.AtomicBoolean();
+        ChatProvider fake = new ChatProvider() {
+            @Override public Reply complete(String system, String input) { throw new AssertionError("unexpected direct call"); }
+            @Override public Reply complete(String system, String input, com.documind.common.DispatchFence fence) {
+                entered.countDown();
+                try { if (!release.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException(); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+                return fence.submit(() -> { sent.set(true); return new Reply("{}", 1L, 1L); });
+            }
+        };
+        var chat = chatService(document, fake);
+        try (var pool = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+            var task = pool.submit(() -> chat.execute(owner, accepted.started(), request.content(), request.scope(), request.documentIds()));
+            try {
+                assertThat(entered.await(10, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                documents.requestDeletion(owner, document);
+                release.countDown();
+                assertThatThrownBy(() -> task.get(10, java.util.concurrent.TimeUnit.SECONDS))
+                        .isInstanceOf(java.util.concurrent.ExecutionException.class);
+                assertThat(sent).isFalse();
+                assertThat(jdbc.sql("SELECT count(*) FROM usage_logs WHERE message_id=:message")
+                        .param("message", accepted.started().assistant()).query(Long.class).single()).isZero();
+            } finally { release.countDown(); }
+        }
+    }
+
+    @Test void replayDeliveryFinishesBeforeConcurrentSourceDeletionCommits() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        UUID conversation = conversations.create(owner, null).id();
+        var first = chatService(document, (system, input) -> new ChatProvider.Reply("Fact [S1].", 1L, 1L));
+        var answer = first.process(owner, conversation, UUID.randomUUID(), "Question?", RetrievalService.Scope.SELECTED, List.of(document));
+        var reading = new java.util.concurrent.CountDownLatch(1);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var replay = pool.submit(() -> {
+                generationLifecycle.writeReplay(owner, conversation, answer.assistantMessageId(), snapshot -> {
+                    assertThat(snapshot.message().sources().get(0).path("availability").asString()).isEqualTo("AVAILABLE");
+                    reading.countDown();
+                    try { if (!release.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new java.io.IOException("timed out"); }
+                    catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new java.io.IOException(interrupted); }
+                });
+                return null;
+            });
+            try {
+                assertThat(reading.await(10, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                var deletion = pool.submit(() -> { documents.requestDeletion(owner, document); return null; });
+                assertThatThrownBy(() -> deletion.get(300, java.util.concurrent.TimeUnit.MILLISECONDS))
+                        .isInstanceOf(java.util.concurrent.TimeoutException.class);
+                release.countDown(); replay.get(10, java.util.concurrent.TimeUnit.SECONDS); deletion.get(10, java.util.concurrent.TimeUnit.SECONDS);
+            } finally { release.countDown(); }
+        }
+        assertThat(generationLifecycle.snapshot(owner, conversation, answer.assistantMessageId()).message().sources().get(0)
+                .path("availability").asString()).isEqualTo("DELETED");
+    }
+
     @Test void followUpResolvesAgainstHistoryAndRetrievesAgain() throws Exception {
         UUID document = upload();
         jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
@@ -402,6 +790,25 @@ class DocumentIT {
         conversations.delete(owner, conversation);
         assertThat(jdbc.sql("SELECT count(*) FROM usage_logs WHERE message_id IS NULL").query(Long.class).single()).isEqualTo(usage);
         assertThat(jdbc.sql("SELECT count(*) FROM question_events").query(Long.class).single()).isEqualTo(2);
+    }
+
+    @Test void providerUsageAlreadyObservedIsRetainedWhenStreamFails() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        UUID conversation = conversations.create(owner, null).id();
+        ChatProvider fake = new ChatProvider() {
+            @Override public Reply complete(String system, String input) { throw new IllegalStateException("unexpected call"); }
+            @Override public Reply stream(String system, String input, java.util.function.Consumer<String> tokens,
+                    java.util.function.Consumer<Reply> usage) {
+                usage.accept(new Reply("", 12L, 7L));
+                throw new IllegalStateException("simulated disconnect");
+            }
+        };
+        var chat = chatService(document, fake);
+        assertThatThrownBy(() -> chat.process(owner, conversation, UUID.randomUUID(), "Question?",
+                RetrievalService.Scope.SELECTED, List.of(document))).isInstanceOf(IllegalStateException.class);
+        assertThat(jdbc.sql("SELECT prompt_tokens FROM usage_logs WHERE operation='CHAT_ANSWER'").query(Long.class).single()).isEqualTo(12);
+        assertThat(jdbc.sql("SELECT completion_tokens FROM usage_logs WHERE operation='CHAT_ANSWER'").query(Long.class).single()).isEqualTo(7);
     }
 
     @Test void uploadIsolationListingAndPersistentFile() throws Exception {

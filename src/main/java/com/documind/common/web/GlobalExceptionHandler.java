@@ -29,7 +29,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorCode error = exception.errorCode();
         var response = ResponseEntity.status(error.status()).header(HttpHeaders.CACHE_CONTROL, "no-store");
         if (error == ErrorCode.REFRESH_RACE) response.header(HttpHeaders.RETRY_AFTER, "1");
-        return response.body(Problems.create(error, request));
+        if (exception instanceof com.documind.chat.ChatRateLimiter.Limited limited)
+            response.header(HttpHeaders.RETRY_AFTER, Long.toString(limited.retryAfter()));
+        var problem = Problems.create(error, request);
+        if (exception instanceof com.documind.chat.ChatConflict conflict) {
+            if (conflict.generationId() != null) problem.setProperty("generationId", conflict.generationId());
+            if (conflict.assistantMessageId() != null) problem.setProperty("assistantMessageId", conflict.assistantMessageId());
+            if (conflict.generationStatus() != null) problem.setProperty("status", conflict.generationStatus());
+            if (error == ErrorCode.GENERATION_IN_PROGRESS) response.header(HttpHeaders.RETRY_AFTER, "1");
+        }
+        return response.body(problem);
     }
 
     // Security filter failures are handled by SecurityProblemWriter before MVC.

@@ -21,10 +21,19 @@ public class DocumentService {
     private final JdbcClient jdbc;
     private final FileStorage storage;
     private final TransactionTemplate transactions;
+    private final org.springframework.context.ApplicationEventPublisher events;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DocumentService(JdbcClient jdbc, FileStorage storage, PlatformTransactionManager manager,
+            org.springframework.context.ApplicationEventPublisher events) {
+        this.jdbc = jdbc; this.storage = storage; this.transactions = new TransactionTemplate(manager); this.events = events;
+    }
 
     public DocumentService(JdbcClient jdbc, FileStorage storage, PlatformTransactionManager manager) {
-        this.jdbc = jdbc; this.storage = storage; this.transactions = new TransactionTemplate(manager);
+        this(jdbc, storage, manager, ignored -> {});
     }
+
+    private record InterruptedGeneration(UUID id, UUID assistant) {}
 
     public record UploadResult(UUID id, String status) {}
     public record DocumentDto(UUID id, String filename, String mediaType, long sizeBytes, String status,
@@ -96,6 +105,29 @@ public class DocumentService {
                     .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
             jdbc.sql("UPDATE documents SET status='DELETING', deleted_requested_at=coalesce(deleted_requested_at,now()) WHERE id=:id")
                     .param("id", id).update();
+            var interrupted = jdbc.sql("""
+                    UPDATE chat_generations g SET status='INCOMPLETE',outcome='SOURCE_DELETED',generation_version=g.generation_version+1
+                    FROM conversations c WHERE c.id=g.conversation_id AND c.user_id=:owner
+                    AND g.status='GENERATING' AND :doc=ANY(g.context_document_ids)
+                    RETURNING g.id,g.assistant_message_id
+                    """).param("owner", owner).param("doc", id).query((rs, row) -> new InterruptedGeneration(
+                            rs.getObject("id", UUID.class), rs.getObject("assistant_message_id", UUID.class))).list();
+            if (!interrupted.isEmpty()) jdbc.sql("""
+                    UPDATE messages SET status='INCOMPLETE',outcome='SOURCE_DELETED',content='',sources='[]'::jsonb
+                    WHERE id IN (:ids) AND status='GENERATING'
+                    """).param("ids", interrupted.stream().map(InterruptedGeneration::assistant).toList()).update();
+            if (!interrupted.isEmpty()) {
+                var event = new SourceGenerationsCancelled(interrupted.stream().map(InterruptedGeneration::id).toList());
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override public void afterCommit() {
+                        try { events.publishEvent(event); }
+                        catch (RuntimeException failure) {
+                            org.slf4j.LoggerFactory.getLogger(DocumentService.class)
+                                    .warn("Unable to signal cancelled generations; persisted state remains fenced");
+                        }
+                    }
+                });
+            }
             jdbc.sql("INSERT INTO document_cleanup_tasks(id,document_id) VALUES (:task,:doc) ON CONFLICT (document_id) DO NOTHING")
                     .param("task", UUID.randomUUID()).param("doc", id).update();
             jdbc.sql("""
