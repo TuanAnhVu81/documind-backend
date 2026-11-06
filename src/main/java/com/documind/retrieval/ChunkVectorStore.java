@@ -21,7 +21,7 @@ public class ChunkVectorStore {
                         Integer startOffset, Integer endOffset, String content,
                         float[] embedding, String embeddingModel, String pipelineVersion) {}
 
-    public record Hit(UUID id, UUID documentId, int chunkIndex, Integer pageNumber,
+    public record Hit(UUID id, UUID documentId, String filename, int chunkIndex, Integer pageNumber,
                       Integer paragraphIndex, Integer startOffset, Integer endOffset,
                       String content, double distance) {}
 
@@ -59,20 +59,46 @@ public class ChunkVectorStore {
     }
 
     public List<Hit> search(UUID owner, List<UUID> selectedDocuments, float[] embedding, int limit) {
+        return search(owner, selectedDocuments, embedding, limit, null, -1);
+    }
+
+    public boolean hasEligible(UUID owner) {
+        return jdbc.sql("""
+                SELECT EXISTS (
+                  SELECT 1 FROM documents d JOIN document_chunks c ON c.document_id=d.id AND c.user_id=d.user_id
+                  WHERE d.user_id=:owner AND d.status='READY' AND d.deleted_requested_at IS NULL
+                    AND c.embedding_model=:model AND c.pipeline_version=:pipeline
+                    AND NOT EXISTS (SELECT 1 FROM document_chunks other WHERE other.document_id=d.id AND other.user_id=d.user_id
+                        AND (other.embedding_model<>:model OR other.pipeline_version<>:pipeline))
+                )
+                """).param("owner", owner).param("model", GeminiEmbeddingModel.MODEL)
+                .param("pipeline", GeminiEmbeddingModel.PIPELINE_VERSION).query(Boolean.class).single();
+    }
+
+    public List<Hit> search(UUID owner, List<UUID> selectedDocuments, float[] embedding, int limit, String model, double minScore) {
         if (owner == null || limit < 1 || limit > 100 || (selectedDocuments != null && selectedDocuments.isEmpty()))
             throw new IllegalArgumentException("Invalid vector search parameters");
+        if (!Double.isFinite(minScore) || minScore < -1 || minScore > 1) throw new IllegalArgumentException("Invalid score");
         String vector = asVector(embedding);
         String filter = selectedDocuments == null ? "" : " AND d.id IN (:documents)";
+        String modelFilter = model == null ? "" : " AND c.embedding_model=:model AND c.pipeline_version=:pipeline AND NOT EXISTS "
+                + "(SELECT 1 FROM document_chunks other WHERE other.document_id=d.id AND other.user_id=d.user_id "
+                + "AND (other.embedding_model<>:model OR other.pipeline_version<>:pipeline))";
         var query = jdbc.sql("""
-            SELECT c.id,c.document_id,c.chunk_index,c.page_number,c.paragraph_index,c.start_offset,c.end_offset,
-                   c.content,c.embedding <=> CAST(:vector AS vector) AS distance
-            FROM document_chunks c JOIN documents d ON d.id=c.document_id AND d.user_id=c.user_id
-            WHERE c.user_id=:owner AND d.user_id=:owner AND d.status='READY' AND d.deleted_requested_at IS NULL
-            """ + filter + " ORDER BY c.embedding <=> CAST(:vector AS vector) LIMIT :limit")
-                .param("owner", owner).param("vector", vector).param("limit", limit);
+            WITH candidates AS MATERIALIZED (
+              SELECT c.id,c.document_id,d.filename,c.chunk_index,c.page_number,c.paragraph_index,c.start_offset,c.end_offset,c.content,c.embedding
+              FROM document_chunks c JOIN documents d ON d.id=c.document_id AND d.user_id=c.user_id
+              WHERE c.user_id=:owner AND d.user_id=:owner AND d.status='READY' AND d.deleted_requested_at IS NULL
+            """ + filter + modelFilter + """
+            ), scored AS (
+              SELECT id,document_id,filename,chunk_index,page_number,paragraph_index,start_offset,end_offset,content,
+                     embedding <=> CAST(:vector AS vector) AS distance FROM candidates
+            ) SELECT * FROM scored WHERE distance <= :maxDistance ORDER BY distance,id LIMIT :limit
+            """).param("owner", owner).param("vector", vector).param("limit", limit).param("maxDistance", 1 - minScore);
         if (selectedDocuments != null) query.param("documents", selectedDocuments);
+        if (model != null) query.param("model", model).param("pipeline", GeminiEmbeddingModel.PIPELINE_VERSION);
         return query.query((rs, row) -> new Hit(rs.getObject("id", UUID.class),
-                rs.getObject("document_id", UUID.class), rs.getInt("chunk_index"),
+                rs.getObject("document_id", UUID.class), rs.getString("filename"), rs.getInt("chunk_index"),
                 rs.getObject("page_number", Integer.class), rs.getObject("paragraph_index", Integer.class),
                 rs.getObject("start_offset", Integer.class), rs.getObject("end_offset", Integer.class),
                 rs.getString("content"), rs.getDouble("distance"))).list();

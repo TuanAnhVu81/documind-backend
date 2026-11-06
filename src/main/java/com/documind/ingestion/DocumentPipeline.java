@@ -2,6 +2,7 @@ package com.documind.ingestion;
 
 import com.documind.document.FileStorage;
 import com.documind.retrieval.ChunkVectorStore;
+import com.documind.retrieval.GeminiEmbeddingModel;
 import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.time.Duration;
@@ -54,31 +55,16 @@ public class DocumentPipeline implements IngestionProcessor {
 
     @Autowired
     public DocumentPipeline(JdbcClient jdbc, FileStorage storage, DocumentExtractor extractor, DocumentChunker chunker,
-            EmbeddingModel model, @Value("${documind.ingestion.embedding-model:text-embedding-3-small}") String modelName,
+            EmbeddingModel model, @Value("${documind.ingestion.embedding-model:gemini-embedding-2}") String modelName,
             @Value("${documind.ingestion.embedding-batch-size:32}") int batchSize,
             @Value("${documind.parser.timeout-seconds:30}") long parseSeconds,
             @Value("${documind.ingestion.embedding-timeout-seconds:60}") long embeddingSeconds,
-            @Value("${spring.ai.openai.embedding.model:text-embedding-3-small}") String providerModel,
-            @Value("${spring.ai.openai.embedding.max-retries:0}") int sdkAttempts,
-            @Value("${spring.ai.openai.embedding.timeout:60s}") String sdkTimeout,
-            @Value("${spring.ai.openai.timeout:60s}") String commonTimeout,
             @Value("${documind.ingestion.stop-grace-seconds:10}") long graceSeconds, ConfigurableApplicationContext context) {
-        this(jdbc, storage, extractor, chunker, model, modelName, batchSize, parseSeconds, embeddingSeconds, providerModel,
-                sdkAttempts, graceSeconds, () -> {
+        this(jdbc, storage, extractor, chunker, model, modelName, batchSize, parseSeconds, embeddingSeconds, modelName,
+                0, graceSeconds, () -> {
                     AvailabilityChangeEvent.publish(context, ReadinessState.REFUSING_TRAFFIC);
                     Thread.ofPlatform().daemon().name("pipeline-fail-stop").start(context::close);
                 });
-        if (model instanceof org.springframework.ai.openai.OpenAiEmbeddingModel openAi
-                && (!modelName.equals(openAi.getOptions().getModel()) || !Integer.valueOf(1536).equals(openAi.getOptions().getDimensions())))
-            throw new IllegalArgumentException("Configured OpenAI embedding model does not match the stored vector model");
-        validateSdkTimeout(sdkTimeout);
-        validateSdkTimeout(commonTimeout);
-    }
-
-    private static void validateSdkTimeout(String value) {
-        Duration timeout = org.springframework.boot.convert.DurationStyle.detectAndParse(value);
-        if (timeout.isZero() || timeout.isNegative() || timeout.compareTo(Duration.ofSeconds(60)) > 0)
-            throw new IllegalArgumentException("OpenAI timeout must be between zero and 60 seconds");
     }
 
     DocumentPipeline(JdbcClient jdbc, FileStorage storage, DocumentExtractor extractor, DocumentChunker chunker,
@@ -91,7 +77,7 @@ public class DocumentPipeline implements IngestionProcessor {
     DocumentPipeline(JdbcClient jdbc, FileStorage storage, DocumentExtractor extractor, DocumentChunker chunker,
             EmbeddingModel model, String modelName, int batchSize, long parseSeconds, long embeddingSeconds,
             String providerModel, int sdkAttempts, long graceSeconds, Runnable failStop) {
-        if (!"text-embedding-3-small".equals(modelName) || !modelName.equals(providerModel) || sdkAttempts != 0
+        if (!GeminiEmbeddingModel.MODEL.equals(modelName) || !modelName.equals(providerModel) || sdkAttempts != 0
                 || batchSize < 1 || batchSize > 128 || parseSeconds < 1 || embeddingSeconds < 1 || embeddingSeconds > 60 || graceSeconds < 1)
             throw new IllegalArgumentException("Invalid ingestion pipeline settings");
         this.jdbc = jdbc; this.storage = storage; this.extractor = extractor; this.chunker = chunker; this.model = model;
@@ -118,7 +104,7 @@ public class DocumentPipeline implements IngestionProcessor {
         for (int offset = 0; offset < parsed.parts().size(); offset += batchSize) {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException("Embedding interrupted");
             var batch = parsed.parts().subList(offset, Math.min(offset + batchSize, parsed.parts().size()));
-            var texts = batch.stream().map(DocumentChunker.Part::text).toList();
+            var texts = batch.stream().map(part -> GeminiEmbeddingModel.documentText(part.text())).toList();
             var response = timed(providers, () -> model.embedForResponse(texts), embeddingTimeout, true, "INGESTION_FAILED");
             float[][] vectors = new float[batch.size()][];
             if (response == null || response.getResults() == null) throw new ProcessingFailure(false, null, "EMBEDDING_INVALID");
@@ -131,7 +117,7 @@ public class DocumentPipeline implements IngestionProcessor {
                 validateVector(vectors[i]);
                 var part = batch.get(i);
                 chunks.add(new ChunkVectorStore.Chunk(UUID.randomUUID(), offset + i, part.page(), part.paragraph(),
-                        part.start(), part.end(), part.text(), vectors[i], modelName, "phase6-v1"));
+                        part.start(), part.end(), part.text(), vectors[i], modelName, GeminiEmbeddingModel.PIPELINE_VERSION));
             }
         }
         return new Result(List.copyOf(chunks), parsed.extracted().pages(), parsed.extracted().paragraphs());
@@ -162,12 +148,13 @@ public class DocumentPipeline implements IngestionProcessor {
         catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof DocumentExtractor.ExtractionFailure invalid) throw new ProcessingFailure(false, null, invalid.code());
-            if (cause instanceof com.openai.errors.OpenAIServiceException provider) {
-                int status = provider.statusCode();
-                var headers = provider.headers().values("retry-after");
-                Duration retryAfter = headers.isEmpty() ? null : retryAfter(headers.getFirst());
-                throw new ProcessingFailure(status == 429 || status == 408 || status >= 500, retryAfter, "INGESTION_FAILED");
+            if (cause instanceof GeminiEmbeddingModel.ProviderFailure provider) {
+                int status = provider.status();
+                Duration retryAfter = provider.retryAfter();
+                throw new ProcessingFailure(status == 429 || status == 408 || status >= 500, retryAfter,
+                        status == 429 ? "PROVIDER_RATE_LIMIT" : "INGESTION_FAILED");
             }
+            if (cause instanceof GeminiEmbeddingModel.InvalidEmbedding) throw new ProcessingFailure(false, null, "EMBEDDING_INVALID");
             if (cause instanceof InterruptedException) throw new InterruptedException("Processing interrupted");
             if (cause instanceof IOException) throw new ProcessingFailure(true, null, "INGESTION_FAILED");
             throw new ProcessingFailure(retryable, null, "INGESTION_FAILED");
@@ -179,23 +166,6 @@ public class DocumentPipeline implements IngestionProcessor {
         if (started.get() && !finished.get()) {
             try { guard.schedule(() -> { if (!finished.get()) failStop.run(); }, stopGrace.toMillis(), TimeUnit.MILLISECONDS); }
             catch (RejectedExecutionException ignored) { /* application is stopping */ }
-        }
-    }
-
-    static Duration retryAfter(String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            long seconds = Long.parseLong(value.trim());
-            if (seconds < 0 || seconds > Long.MAX_VALUE / 1000) return null;
-            java.time.Instant.now().plusSeconds(seconds);
-            return Duration.ofSeconds(seconds);
-        } catch (java.time.DateTimeException invalid) { return null; }
-        catch (NumberFormatException ignored) {
-            try {
-                Duration delay = Duration.between(java.time.Instant.now(), java.time.ZonedDateTime.parse(value,
-                        java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant());
-                return delay.isNegative() ? Duration.ZERO : delay;
-            } catch (RuntimeException invalid) { return null; }
         }
     }
 

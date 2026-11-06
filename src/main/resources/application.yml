@@ -22,13 +22,6 @@ spring:
     user: ${DB_MIGRATION_USERNAME:${DB_USERNAME}}
     password: ${DB_MIGRATION_PASSWORD:${DB_PASSWORD}}
   ai:
-    openai:
-      embedding:
-        max-retries: 0
-        timeout: 60s
-        model: text-embedding-3-small
-        dimensions: 1536
-    # Phase 1 deliberately starts without a provider account or API key.
     model:
       chat: none
       embedding: none
@@ -86,10 +79,16 @@ springdoc:
   swagger-ui:
     enabled: false
 documind:
+  gemini:
+    enabled: false
+  retrieval:
+    top-k: 5
+    # Baseline only; must be calibrated on the approved evaluation set.
+    min-score: -1
   ingestion:
     worker-enabled: false
     pipeline-enabled: false
-    embedding-model: text-embedding-3-small
+    embedding-model: gemini-embedding-2
     embedding-batch-size: 32
     embedding-timeout-seconds: 60
     chunk-size: 1000

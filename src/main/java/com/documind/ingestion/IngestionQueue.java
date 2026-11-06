@@ -177,6 +177,7 @@ public class IngestionQueue {
             case "INVALID_DOCUMENT" -> "Document is damaged or cannot be read.";
             case "PARSER_TIMEOUT" -> "Document parsing timed out.";
             case "EMBEDDING_INVALID" -> "Embedding response is invalid.";
+            case "PROVIDER_RATE_LIMIT" -> "Provider quota or rate limit was reached; check quota before retrying.";
             default -> "Document processing failed.";
         };
     }
@@ -184,7 +185,7 @@ public class IngestionQueue {
     private static String safeCode(String code) {
         return code != null && java.util.Set.of("PDF_PAGE_LIMIT", "TEXT_LIMIT", "DOCX_RESOURCE_LIMIT", "CHUNK_LIMIT", "NO_EXTRACTABLE_TEXT",
                 "INVALID_DOCUMENT", "INVALID_TEXT_ENCODING", "UNSUPPORTED_DOCUMENT", "PARSER_TIMEOUT",
-                "EMBEDDING_INVALID", "INGESTION_FAILED").contains(code) ? code : "INGESTION_FAILED";
+                "EMBEDDING_INVALID", "PROVIDER_RATE_LIMIT", "INGESTION_FAILED").contains(code) ? code : "INGESTION_FAILED";
     }
 
     private void cancel(UUID job) {

@@ -62,9 +62,14 @@ class PipelineIT {
     @Autowired IngestionQueue queue;
     @Autowired DocumentService documents;
     @Autowired tools.jackson.databind.json.JsonMapper json;
+    @Autowired com.documind.retrieval.ChunkVectorStore vectorStore;
+    @Autowired javax.sql.DataSource dataSource;
+    @Autowired org.springframework.transaction.PlatformTransactionManager transactionManager;
+    @Autowired org.springframework.beans.factory.ObjectProvider<EmbeddingModel> modelProvider;
     private UUID owner;
     @Autowired FakeEmbedding embeddings;
     @Autowired DocumentPipeline wiredPipeline;
+    @Autowired com.documind.retrieval.RetrievalService retrieval;
     private final List<DocumentPipeline> pipelines = new ArrayList<>();
 
     @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) throws Exception {
@@ -85,7 +90,9 @@ class PipelineIT {
     static class ModelConfig { @Bean FakeEmbedding fakeEmbedding() { return new FakeEmbedding(); } }
     @BeforeEach void setup() {
         embeddings.fail.set(false); embeddings.rateLimited.set(false); embeddings.invalidVector.set(false); embeddings.failOnCall = 0;
+        embeddings.retryAfter = Duration.ofSeconds(90);
         embeddings.calls.set(0); embeddings.ignoreInterrupt.set(false); embeddings.entered = null; embeddings.release = null;
+        embeddings.embeddedInTransaction.set(false);
         owner = UUID.randomUUID();
         jdbc.sql("INSERT INTO users(id,email,password_hash) VALUES (:id,:email,'fixture')")
                 .param("id", owner).param("email", owner + "@example.com").update();
@@ -100,8 +107,8 @@ class PipelineIT {
     }
 
     private DocumentPipeline pipeline(long embeddingSeconds) {
-        var pipeline = new DocumentPipeline(jdbc, storage, extractor, chunker, embeddings, "text-embedding-3-small", 32, 30, embeddingSeconds,
-                "text-embedding-3-small", 0);
+        var pipeline = new DocumentPipeline(jdbc, storage, extractor, chunker, embeddings, "gemini-embedding-2", 32, 30, embeddingSeconds,
+                "gemini-embedding-2", 0);
         pipelines.add(pipeline); return pipeline;
     }
     private UUID save(String name, byte[] bytes) throws Exception {
@@ -128,18 +135,18 @@ class PipelineIT {
         final AtomicBoolean rateLimited = new AtomicBoolean();
         final AtomicBoolean invalidVector = new AtomicBoolean();
         final AtomicBoolean ignoreInterrupt = new AtomicBoolean();
+        final AtomicBoolean embeddedInTransaction = new AtomicBoolean();
         final AtomicInteger calls = new AtomicInteger();
         volatile int failOnCall;
+        volatile Duration retryAfter = Duration.ofSeconds(90);
         volatile CountDownLatch entered, release;
         @Override public EmbeddingResponse call(EmbeddingRequest request) {
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) embeddedInTransaction.set(true);
             int call = calls.incrementAndGet();
             if (call == failOnCall) throw new IllegalStateException("simulated later batch failure");
             if (fail.get()) throw new IllegalStateException("simulated provider failure");
             if (rateLimited.get()) {
-                var failure = org.mockito.Mockito.mock(com.openai.errors.OpenAIServiceException.class);
-                org.mockito.Mockito.when(failure.statusCode()).thenReturn(429);
-                org.mockito.Mockito.when(failure.headers()).thenReturn(com.openai.core.http.Headers.builder().put("Retry-After", "90").build());
-                throw failure;
+                throw new com.documind.retrieval.GeminiEmbeddingModel.ProviderFailure(429, retryAfter);
             }
             if (entered != null) {
                 entered.countDown();
@@ -212,56 +219,13 @@ class PipelineIT {
         }
     }
 
-    @Test void providerRetryAfterHeaderIsParsedSafely() {
-        assertThat(DocumentPipeline.retryAfter("90")).isEqualTo(Duration.ofSeconds(90));
-        assertThat(DocumentPipeline.retryAfter("-1")).isNull();
-        assertThat(DocumentPipeline.retryAfter("invalid")).isNull();
-    }
-
-    @Test void openAiSdkMakesOneLocalRequestAndPreservesRetryAfter() throws Exception {
-        var calls = new AtomicInteger();
-        var requestBody = new java.util.concurrent.atomic.AtomicReference<String>();
-        var server = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/v1/embeddings", exchange -> {
-            calls.incrementAndGet(); requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] payload = "{\"error\":{\"message\":\"simulated\",\"type\":\"rate_limit_error\",\"code\":\"rate_limit\"}}".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.getResponseHeaders().add("Retry-After", "90");
-            exchange.sendResponseHeaders(429, payload.length);
-            try (var out = exchange.getResponseBody()) { out.write(payload); }
-        });
-        server.start();
-        try {
-            UUID id = save("provider.txt", "local-only test".getBytes(StandardCharsets.UTF_8));
-            var claim = queue.claim("provider-test", Duration.ofSeconds(120)).orElseThrow();
-            String secret = Base64.getEncoder().encodeToString("pipeline-secret-test-at-least-32bytes".getBytes(StandardCharsets.UTF_8));
-            String[] args = {"--server.port=0", "--spring.profiles.active=test", "--spring.datasource.url=" + db.getJdbcUrl(),
-                    "--spring.datasource.username=" + db.getUsername(), "--spring.datasource.password=" + db.getPassword(),
-                    "--spring.flyway.user=" + db.getUsername(), "--spring.flyway.password=" + db.getPassword(),
-                    "--documind.auth.jwt-secret=" + secret, "--documind.auth.allowed-origins=https://documind.test",
-                    "--documind.storage.path=" + directory, "--spring.ai.model.embedding=openai",
-                    "--spring.ai.openai.embedding.api-key=local-test-only", "--spring.ai.openai.embedding.base-url=http://127.0.0.1:" + server.getAddress().getPort() + "/v1",
-                    "--documind.ingestion.pipeline-enabled=true", "--logging.level.root=ERROR"};
-            try (var context = new SpringApplicationBuilder(DocumindBackendApplication.class).run(args)) {
-                var pipeline = context.getBean(DocumentPipeline.class);
-                assertThatThrownBy(() -> pipeline.process(claim)).isInstanceOf(IngestionProcessor.ProcessingFailure.class)
-                        .satisfies(e -> { var failure = (IngestionProcessor.ProcessingFailure)e;
-                            assertThat(failure.retryable()).isTrue(); assertThat(failure.retryAfter()).isEqualTo(Duration.ofSeconds(90)); });
-                assertThat(calls.get()).isEqualTo(1);
-                assertThat(requestBody.get()).contains("text-embedding-3-small");
-                assertThat(json.readTree(requestBody.get()).get("dimensions").asInt()).isEqualTo(1536);
-                assertThat(chunks(id)).isZero();
-            }
-        } finally { server.stop(0); }
-    }
-
     @Test void workerPersistsVectorsAndNeverCommitsFailedEmbedding() throws Exception {
         UUID id = save("handbook.txt", Files.readAllBytes(Path.of("eval/fixtures/handbook-15.txt")));
         var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
         try {
             worker.poll(); await(() -> status(id).equals("READY"));
             assertThat(chunks(id)).isGreaterThan(0);
-            assertThat(jdbc.sql("SELECT count(*) FROM document_chunks WHERE document_id=:id AND (paragraph_index IS NULL OR start_offset IS NULL OR end_offset IS NULL OR embedding_model<>'text-embedding-3-small' OR pipeline_version<>'phase6-v1')")
+            assertThat(jdbc.sql("SELECT count(*) FROM document_chunks WHERE document_id=:id AND (paragraph_index IS NULL OR start_offset IS NULL OR end_offset IS NULL OR embedding_model<>'gemini-embedding-2' OR pipeline_version<>'phase7-gemini-v1')")
                     .param("id", id).query(Long.class).single()).isZero();
         } finally { worker.stop(); }
         UUID failed = save("fail.txt", "example".getBytes(StandardCharsets.UTF_8)); embeddings.fail.set(true);
@@ -336,8 +300,8 @@ class PipelineIT {
                 entered.countDown(); release.await(); return super.extract(input, type);
             }
         };
-        var pipeline = new DocumentPipeline(jdbc, storage, blockedExtractor, chunker, embeddings, "text-embedding-3-small", 32, 30, 60,
-                "text-embedding-3-small", 0);
+        var pipeline = new DocumentPipeline(jdbc, storage, blockedExtractor, chunker, embeddings, "gemini-embedding-2", 32, 30, 60,
+                "gemini-embedding-2", 0);
         pipelines.add(pipeline);
         var observed = spy(queue);
         doAnswer(invocation -> {
@@ -398,8 +362,8 @@ class PipelineIT {
                 Thread.sleep(5000); throw new IllegalStateException("unreachable");
             }
         };
-        var pipeline = new DocumentPipeline(jdbc, storage, slow, chunker, embeddings, "text-embedding-3-small", 32, 1, 60,
-                "text-embedding-3-small", 0);
+        var pipeline = new DocumentPipeline(jdbc, storage, slow, chunker, embeddings, "gemini-embedding-2", 32, 1, 60,
+                "gemini-embedding-2", 0);
         pipelines.add(pipeline);
         var claim = queue.claim("test", Duration.ofSeconds(120)).orElseThrow();
         assertThatThrownBy(() -> pipeline.process(claim)).isInstanceOf(IngestionProcessor.ProcessingFailure.class)
@@ -424,8 +388,8 @@ class PipelineIT {
         embeddings.entered = new CountDownLatch(1); embeddings.release = new CountDownLatch(1);
         embeddings.ignoreInterrupt.set(true);
         var failStopped = new CountDownLatch(1);
-        var pipeline = new DocumentPipeline(jdbc, storage, extractor, chunker, embeddings, "text-embedding-3-small", 32,
-                30, 1, "text-embedding-3-small", 0, 1, failStopped::countDown);
+        var pipeline = new DocumentPipeline(jdbc, storage, extractor, chunker, embeddings, "gemini-embedding-2", 32,
+                30, 1, "gemini-embedding-2", 0, 1, failStopped::countDown);
         pipelines.add(pipeline);
         try {
             assertThatThrownBy(() -> pipeline.process(claim)).isInstanceOf(IngestionProcessor.ProcessingFailure.class);
@@ -454,5 +418,176 @@ class PipelineIT {
             assertThat(retried).isEqualTo(1);
             System.out.println("Phase 6 eval with fake embeddings: READY=20, FAILED=0, retried=" + retried);
         } finally { worker.stop(); }
+    }
+
+    @Test void retrievalChecksScopeOwnerStatusAndEmbeddingModel() throws Exception {
+        UUID id = save("ready.txt", "Tài liệu của tài khoản A".getBytes(StandardCharsets.UTF_8));
+        var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try { worker.poll(); await(() -> status(id).equals("READY")); }
+        finally { worker.stop(); }
+        UUID pending = save("pending.txt", "Tài liệu đang chờ".getBytes(StandardCharsets.UTF_8));
+        UUID other = UUID.randomUUID();
+        jdbc.sql("INSERT INTO users(id,email,password_hash) VALUES (:id,:email,'fixture')")
+                .param("id", other).param("email", other + "@example.com").update();
+        UUID foreignDoc = UUID.randomUUID();
+        jdbc.sql("INSERT INTO documents(id,user_id,filename,storage_key,media_type,size_bytes,status) VALUES (:id,:owner,'other.txt',:key,'text/plain',1,'READY')")
+                .param("id", foreignDoc).param("owner", other).param("key", UUID.randomUUID().toString()).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,content,embedding,embedding_model,pipeline_version)
+                SELECT gen_random_uuid(),:foreign,:owner,chunk_index,paragraph_index,start_offset,end_offset,content,embedding,embedding_model,pipeline_version
+                FROM document_chunks WHERE document_id=:source
+                """).param("foreign", foreignDoc).param("owner", other).param("source", id).update();
+        var all = com.documind.retrieval.RetrievalService.Scope.ALL_READY;
+        var selected = com.documind.retrieval.RetrievalService.Scope.SELECTED;
+        assertThat(retrieval.search(owner, "nội dung", all, null)).extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId).containsExactly(id);
+        assertThat(retrieval.search(other, "nội dung", all, null)).extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId).containsExactly(foreignDoc);
+        assertThat(retrieval.search(owner, "nội dung", selected, List.of(id))).hasSize(1);
+        assertThatThrownBy(() -> retrieval.search(other, "x", selected, List.of(id)))
+                .isInstanceOf(com.documind.common.error.AppException.class)
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.RESOURCE_NOT_FOUND));
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(pending)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(foreignDoc)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.RESOURCE_NOT_FOUND));
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of()))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.INVALID_DOCUMENT_SCOPE));
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, null))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.INVALID_DOCUMENT_SCOPE));
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(id, id)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.INVALID_DOCUMENT_SCOPE));
+        jdbc.sql("UPDATE documents SET status='DELETING' WHERE id=:id").param("id", pending).update();
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(pending)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
+        jdbc.sql("UPDATE document_chunks SET embedding_model='old-model' WHERE document_id=:id").param("id", id).update();
+        assertThat(retrieval.search(owner, "x", all, null)).isEmpty();
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(id)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
+        jdbc.sql("UPDATE document_chunks SET embedding_model='gemini-embedding-2',pipeline_version='older' WHERE document_id=:id").param("id", id).update();
+        assertThat(retrieval.search(owner, "x", all, null)).isEmpty();
+        assertThatThrownBy(() -> retrieval.search(owner, "x", selected, List.of(id)))
+                .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
+    }
+
+    @Test void emptyAllReadyDoesNotCallEmbedding() {
+        embeddings.fail.set(true);
+        assertThat(retrieval.search(owner, "câu hỏi", com.documind.retrieval.RetrievalService.Scope.ALL_READY, null)).isEmpty();
+        assertThat(embeddings.calls.get()).isZero();
+    }
+
+    @Test void providerQuotaDelaySurvivesWorkerAndQueue() throws Exception {
+        UUID id = save("quota.txt", "Tài liệu kiểm thử".getBytes(StandardCharsets.UTF_8));
+        embeddings.rateLimited.set(true); embeddings.retryAfter = Duration.ofHours(4);
+        var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try {
+            worker.poll();
+            await(() -> jdbc.sql("SELECT attempts FROM processing_jobs WHERE document_id=:id").param("id", id).query(Integer.class).single() == 1
+                    && status(id).equals("PENDING"));
+            long remaining = jdbc.sql("SELECT extract(epoch from (next_run_at-clock_timestamp()))::bigint FROM processing_jobs WHERE document_id=:id")
+                    .param("id", id).query(Long.class).single();
+            assertThat(remaining).isGreaterThanOrEqualTo(14395);
+            assertThat(chunks(id)).isZero();
+        } finally { worker.stop(); }
+        UUID lastAttempt = save("last-quota.txt", "Tài liệu kiểm thử".getBytes(StandardCharsets.UTF_8));
+        jdbc.sql("UPDATE processing_jobs SET attempts=2 WHERE document_id=:id").param("id", lastAttempt).update();
+        var lastWorker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try {
+            lastWorker.poll(); await(() -> status(lastAttempt).equals("FAILED"));
+            assertThat(jdbc.sql("SELECT error_code FROM documents WHERE id=:id").param("id", lastAttempt).query(String.class).single())
+                    .isEqualTo("PROVIDER_RATE_LIMIT");
+        } finally { lastWorker.stop(); }
+    }
+
+    @Test void deleteDuringEmbeddingMakesSelectedScopeNotReady() throws Exception {
+        UUID id = save("selected.txt", "Tài liệu".getBytes(StandardCharsets.UTF_8));
+        var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try { worker.poll(); await(() -> status(id).equals("READY")); }
+        finally { worker.stop(); }
+        embeddings.entered = new CountDownLatch(1); embeddings.release = new CountDownLatch(1);
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var result = executor.submit(() -> retrieval.search(owner, "câu hỏi", com.documind.retrieval.RetrievalService.Scope.SELECTED, List.of(id)));
+            assertThat(embeddings.entered.await(5, TimeUnit.SECONDS)).isTrue();
+            jdbc.sql("UPDATE documents SET status='DELETING' WHERE id=:id").param("id", id).update();
+            embeddings.release.countDown();
+            assertThatThrownBy(() -> result.get(5, TimeUnit.SECONDS)).hasCauseInstanceOf(com.documind.common.error.AppException.class)
+                    .satisfies(e -> assertThat(((com.documind.common.error.AppException)e.getCause()).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
+        } finally { embeddings.release.countDown(); }
+    }
+
+    @Test void selectedReadHoldsDocumentLockUntilSearchFinishes() throws Exception {
+        UUID id = save("lock.txt", "Tài liệu".getBytes(StandardCharsets.UTF_8));
+        var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try { worker.poll(); await(() -> status(id).equals("READY")); }
+        finally { worker.stop(); }
+        var entered = new CountDownLatch(1); var release = new CountDownLatch(1);
+        var blockedStore = spy(new com.documind.retrieval.ChunkVectorStore(jdbc));
+        doAnswer(invocation -> {
+            entered.countDown();
+            if (!release.await(5, TimeUnit.SECONDS)) throw new IllegalStateException("test timed out");
+            return invocation.callRealMethod();
+        }).when(blockedStore).search(any(), any(), any(), org.mockito.ArgumentMatchers.anyInt(), any(), org.mockito.ArgumentMatchers.anyDouble());
+        var service = new com.documind.retrieval.RetrievalService(jdbc, blockedStore, modelProvider, transactionManager, 5, -1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var search = executor.submit(() -> service.search(owner, "câu hỏi", com.documind.retrieval.RetrievalService.Scope.SELECTED, List.of(id)));
+            assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
+            var deleted = executor.submit(() -> jdbc.sql("UPDATE documents SET status='DELETING' WHERE id=:id").param("id", id).update());
+            assertThatThrownBy(() -> deleted.get(300, TimeUnit.MILLISECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);
+            release.countDown();
+            assertThat(search.get(5, TimeUnit.SECONDS)).hasSize(1);
+            assertThat(embeddings.embeddedInTransaction).isFalse();
+            assertThat(deleted.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+        } finally { release.countDown(); }
+    }
+
+    @Test
+    @org.junit.jupiter.api.condition.EnabledIfSystemProperty(named = "documind.benchmark", matches = "true")
+    void benchmarkExactAndHnswWithTenThousandVectors() throws Exception {
+        UUID other = UUID.randomUUID(), ownDoc = UUID.randomUUID(), otherDoc = UUID.randomUUID();
+        jdbc.sql("INSERT INTO users(id,email,password_hash) VALUES (:id,:email,'fixture')")
+                .param("id", other).param("email", other + "@example.com").update();
+        for (var pair : List.of(java.util.Map.entry(ownDoc, owner), java.util.Map.entry(otherDoc, other))) {
+            jdbc.sql("INSERT INTO documents(id,user_id,filename,storage_key,media_type,size_bytes,status) VALUES (:id,:owner,'bench.txt',:key,'text/plain',1,'READY')")
+                    .param("id", pair.getKey()).param("owner", pair.getValue()).param("key", UUID.randomUUID().toString()).update();
+        }
+        jdbc.sql("""
+            INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,content,embedding,embedding_model,pipeline_version)
+            SELECT gen_random_uuid(), CASE WHEN g % 2 = 0 THEN :ownDoc ELSE :otherDoc END,
+                   CASE WHEN g % 2 = 0 THEN :owner ELSE :other END, g, 1, 0, 1, 'x',
+                   ('[1,' || (g::double precision / 10000)::text || repeat(',0',1534) || ']')::vector,
+                   'gemini-embedding-2','phase7-gemini-v1' FROM generate_series(1,10000) g
+            """).param("ownDoc", ownDoc).param("otherDoc", otherDoc).param("owner", owner).param("other", other).update();
+        jdbc.sql("ANALYZE document_chunks").update();
+        float[] query = new float[1536]; query[0] = 1; query[1] = 0.5f;
+        String vector = "[1,0.5" + ",0".repeat(1534) + "]";
+        long[] exactTimes = new long[100], approximateTimes = new long[100];
+        int exactCount = 0, annCount = 0, overlap = 0;
+        try (var connection = dataSource.getConnection(); var statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            statement.execute("SET LOCAL enable_seqscan=off");
+            statement.execute("SET LOCAL enable_bitmapscan=off");
+            String sql = "SELECT id FROM document_chunks WHERE user_id='" + owner + "' ORDER BY embedding <=> '" + vector + "'::vector LIMIT 5";
+            String plan;
+            try (var result = statement.executeQuery("EXPLAIN " + sql)) {
+                var text = new StringBuilder(); while (result.next()) text.append(result.getString(1)); plan = text.toString();
+            }
+            assertThat(plan).contains("ix_chunks_embedding_hnsw");
+            for (int i = 0; i < 110; i++) {
+                long start = System.nanoTime();
+                var exact = vectorStore.search(owner, null, query, 5, "gemini-embedding-2", -1);
+                long exactElapsed = System.nanoTime() - start;
+                start = System.nanoTime();
+                var ann = new ArrayList<UUID>();
+                try (var rows = statement.executeQuery(sql)) { while (rows.next()) ann.add(rows.getObject(1, UUID.class)); }
+                long annElapsed = System.nanoTime() - start;
+                if (i >= 10) { exactTimes[i-10] = exactElapsed; approximateTimes[i-10] = annElapsed; }
+                exactCount = exact.size(); annCount = ann.size();
+                var ids = exact.stream().map(com.documind.retrieval.ChunkVectorStore.Hit::id).toList();
+                overlap = (int) ann.stream().filter(ids::contains).count();
+            }
+            connection.rollback();
+        }
+        java.util.Arrays.sort(exactTimes); java.util.Arrays.sort(approximateTimes);
+        System.out.printf("BENCH exact_p95_ms=%.2f hnsw_p95_ms=%.2f exact_count=%d hnsw_count=%d overlap=%d/5%n",
+                exactTimes[94] / 1e6, approximateTimes[94] / 1e6, exactCount, annCount, overlap);
+        assertThat(exactCount).isEqualTo(5);
     }
 }
