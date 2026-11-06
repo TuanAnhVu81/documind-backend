@@ -7,6 +7,7 @@ public enum ErrorCode {
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "Yêu cầu không thể được xử lý."),
     INVALID_DOCUMENT_SCOPE(HttpStatus.BAD_REQUEST, "Phạm vi tài liệu không hợp lệ."),
     DOCUMENT_NOT_READY(HttpStatus.CONFLICT, "Tài liệu chưa sẵn sàng."),
+    GENERATION_IN_PROGRESS(HttpStatus.CONFLICT, "Hội thoại đang có lượt trả lời."),
     AMBIGUOUS_REFRESH_COOKIE("INVALID_REQUEST", HttpStatus.BAD_REQUEST, "Cookie xác thực không rõ ràng."),
     PASSWORD_TOO_LONG("INVALID_REQUEST", HttpStatus.BAD_REQUEST, "Mật khẩu không được vượt quá 72 byte UTF-8."),
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "Authentication is required."),

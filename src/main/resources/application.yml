@@ -79,6 +79,8 @@ springdoc:
   swagger-ui:
     enabled: false
 documind:
+  chat:
+    enabled: false
   gemini:
     enabled: false
   retrieval:

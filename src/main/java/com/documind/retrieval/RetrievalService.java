@@ -36,11 +36,15 @@ public class RetrievalService {
 
     public enum Scope { ALL_READY, SELECTED }
     public List<ChunkVectorStore.Hit> search(UUID owner, String question, Scope scope, List<UUID> ids) {
+        return search(owner, question, scope, ids, () -> {});
+    }
+    public List<ChunkVectorStore.Hit> search(UUID owner, String question, Scope scope, List<UUID> ids, Runnable beforeEmbedding) {
         validate(owner, scope, ids);
         if (question == null || question.isBlank()) throw new AppException(ErrorCode.INVALID_REQUEST);
         if (scope == Scope.ALL_READY && !vectors.hasEligible(owner)) return List.of();
         var model = models.getIfAvailable();
         if (model == null) throw new IllegalStateException("Embedding is disabled");
+        beforeEmbedding.run();
         var results = model.embedForResponse(List.of(GeminiEmbeddingModel.queryText(question))).getResults();
         if (results == null || results.size() != 1 || results.getFirst() == null || !Integer.valueOf(0).equals(results.getFirst().getIndex()))
             throw new GeminiEmbeddingModel.InvalidEmbedding();
@@ -56,7 +60,7 @@ public class RetrievalService {
         });
     }
 
-    void validate(UUID owner, Scope scope, List<UUID> ids) {
+    public void validate(UUID owner, Scope scope, List<UUID> ids) {
         if (owner == null || scope == null || (scope == Scope.ALL_READY && ids != null)
                 || (scope == Scope.SELECTED && (ids == null || ids.isEmpty() || ids.size() > 20
                 || ids.stream().anyMatch(java.util.Objects::isNull) || new HashSet<>(ids).size() != ids.size())))
