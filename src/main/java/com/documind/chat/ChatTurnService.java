@@ -25,6 +25,12 @@ public class ChatTurnService {
     private final RagAnswerEngine answerEngine;
     private final ObjectProvider<ChatProvider> providers;
     private final JsonMapper json;
+    private io.micrometer.core.instrument.Counter providerFailures;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void configureMetrics(io.micrometer.core.instrument.MeterRegistry registry) {
+        providerFailures = registry.counter("documind.provider.failures", "operation", "chat");
+    }
 
     public ChatTurnService(JdbcClient jdbc, PlatformTransactionManager manager, RetrievalService retrieval,
             QueryResolver resolver, RagAnswerEngine answerEngine, ObjectProvider<ChatProvider> providers, JsonMapper json) {
@@ -218,6 +224,7 @@ public class ChatTurnService {
                 };
                 try { reply = tokens == null ? delegate.complete(system, input, fence) : delegate.stream(system, input, tokens, observed::set, fence); return reply; }
                 catch (GeminiChatProvider.ProviderException failure) {
+                    if (failure.attempted() && !Thread.currentThread().isInterrupted() && providerFailures != null) providerFailures.increment();
                     attempted = failure.attempted();
                     if (failure.usage() != null) observed.set(failure.usage());
                     throw failure;

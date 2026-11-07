@@ -19,8 +19,14 @@ public class ChatRateLimiter {
     private static final int MAX_USERS = 10_000;
     private final Clock clock;
     private final Map<UUID, ArrayDeque<Long>> accepted = new HashMap<>();
+    private io.micrometer.core.instrument.Counter rejected;
 
     public ChatRateLimiter(Clock clock) { this.clock = clock; }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void configureMetrics(io.micrometer.core.instrument.MeterRegistry registry) {
+        rejected = registry.counter("documind.rate_limit.rejected", "operation", "chat");
+    }
 
     public static final class Limited extends AppException {
         private final long retryAfter;
@@ -45,7 +51,12 @@ public class ChatRateLimiter {
         var window = accepted.get(owner);
         long retry = window == null && accepted.size() >= MAX_USERS ? 1
                 : window != null && window.size() >= LIMIT ? Math.max(1, (window.getFirst() + WINDOW_MS - now + 999) / 1000) : 0;
-        Decision<T> result = callback.apply(retry);
+        Decision<T> result;
+        try { result = callback.apply(retry); }
+        catch (Limited limited) {
+            if (rejected != null) rejected.increment();
+            throw limited;
+        }
         if (result.created()) {
             if (retry > 0) throw new IllegalStateException("Admission callback ignored rate limit");
             accepted.computeIfAbsent(owner, ignored -> new ArrayDeque<>()).addLast(clock.millis());

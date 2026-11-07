@@ -43,6 +43,12 @@ public class DocumentPipeline implements IngestionProcessor {
     private final Duration parseTimeout, embeddingTimeout;
     private final Duration stopGrace;
     private final Runnable failStop;
+    private io.micrometer.core.instrument.Counter providerFailures;
+
+    @Autowired
+    void configureMetrics(io.micrometer.core.instrument.MeterRegistry registry) {
+        providerFailures = registry.counter("documind.provider.failures", "operation", "ingestion_embedding");
+    }
     private final ScheduledExecutorService guard = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().daemon().name("pipeline-cancellation-guard").factory());
     private final ExecutorService parsers = boundedExecutor("document-parser-");
@@ -86,12 +92,12 @@ public class DocumentPipeline implements IngestionProcessor {
         stopGrace = Duration.ofSeconds(graceSeconds); this.failStop = failStop;
     }
 
-    private record FileRef(String key, String mediaType) {}
+    private record FileRef(String key, String mediaType, UUID owner) {}
     private record Parsed(DocumentExtractor.Extracted extracted, List<DocumentChunker.Part> parts) {}
 
     @Override public Result process(JobClaimStore.Claim claim) throws Exception {
-        FileRef file = jdbc.sql("SELECT storage_key,media_type FROM documents WHERE id=:id AND status='PROCESSING' AND deleted_requested_at IS NULL")
-                .param("id", claim.documentId()).query((rs, row) -> new FileRef(rs.getString(1), rs.getString(2))).optional()
+        FileRef file = jdbc.sql("SELECT storage_key,media_type,user_id FROM documents WHERE id=:id AND status='PROCESSING' AND deleted_requested_at IS NULL")
+                .param("id", claim.documentId()).query((rs, row) -> new FileRef(rs.getString(1), rs.getString(2), rs.getObject(3, UUID.class))).optional()
                 .orElseThrow(() -> new ProcessingFailure(false, null, "INGESTION_FAILED"));
         Parsed parsed = timed(parsers, () -> {
             try (var input = storage.open(file.key())) {
@@ -105,7 +111,15 @@ public class DocumentPipeline implements IngestionProcessor {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException("Embedding interrupted");
             var batch = parsed.parts().subList(offset, Math.min(offset + batchSize, parsed.parts().size()));
             var texts = batch.stream().map(part -> GeminiEmbeddingModel.documentText(part.text())).toList();
-            var response = timed(providers, () -> model.embedForResponse(texts), embeddingTimeout, true, "INGESTION_FAILED");
+            var response = timed(providers, () -> {
+                // Record before dispatch so a crash or timeout cannot silently undercount a possible call.
+                jdbc.sql("""
+                        INSERT INTO usage_logs(id,user_id,job_id,operation,provider,model)
+                        VALUES (:id,:owner,:job,'INGESTION_EMBEDDING','GEMINI',:model)
+                        """).param("id", UUID.randomUUID()).param("owner", file.owner()).param("job", claim.id())
+                        .param("model", modelName).update();
+                return model.embedForResponse(texts);
+            }, embeddingTimeout, true, "INGESTION_FAILED");
             float[][] vectors = new float[batch.size()][];
             if (response == null || response.getResults() == null) throw new ProcessingFailure(false, null, "EMBEDDING_INVALID");
             for (var item : response.getResults()) {
@@ -149,12 +163,17 @@ public class DocumentPipeline implements IngestionProcessor {
             Throwable cause = e.getCause();
             if (cause instanceof DocumentExtractor.ExtractionFailure invalid) throw new ProcessingFailure(false, null, invalid.code());
             if (cause instanceof GeminiEmbeddingModel.ProviderFailure provider) {
+                if (providerFailures != null) providerFailures.increment();
                 int status = provider.status();
                 Duration retryAfter = provider.retryAfter();
                 throw new ProcessingFailure(status == 429 || status == 408 || status >= 500, retryAfter,
                         status == 429 ? "PROVIDER_RATE_LIMIT" : "INGESTION_FAILED");
             }
-            if (cause instanceof GeminiEmbeddingModel.InvalidEmbedding) throw new ProcessingFailure(false, null, "EMBEDDING_INVALID");
+            if (cause instanceof GeminiEmbeddingModel.InvalidEmbedding) {
+                if (providerFailures != null) providerFailures.increment();
+                throw new ProcessingFailure(false, null, "EMBEDDING_INVALID");
+            }
+            if (cause instanceof GeminiEmbeddingModel.TransportFailure && providerFailures != null) providerFailures.increment();
             if (cause instanceof InterruptedException) throw new InterruptedException("Processing interrupted");
             if (cause instanceof IOException) throw new ProcessingFailure(true, null, "INGESTION_FAILED");
             throw new ProcessingFailure(retryable, null, "INGESTION_FAILED");

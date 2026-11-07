@@ -55,7 +55,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics
   endpoint:
     health:
       show-details: never
@@ -79,6 +79,9 @@ springdoc:
   swagger-ui:
     enabled: false
 documind:
+  upload:
+    max-per-window: ${UPLOAD_MAX_PER_WINDOW:10}
+    window-seconds: ${UPLOAD_WINDOW_SECONDS:60}
   chat:
     enabled: false
   gemini:

@@ -31,6 +31,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (error == ErrorCode.REFRESH_RACE) response.header(HttpHeaders.RETRY_AFTER, "1");
         if (exception instanceof com.documind.chat.ChatRateLimiter.Limited limited)
             response.header(HttpHeaders.RETRY_AFTER, Long.toString(limited.retryAfter()));
+        if (exception instanceof com.documind.document.UploadRateLimiter.Limited limited)
+            response.header(HttpHeaders.RETRY_AFTER, Long.toString(limited.retryAfter()));
         var problem = Problems.create(error, request);
         if (exception instanceof com.documind.chat.ChatConflict conflict) {
             if (conflict.generationId() != null) problem.setProperty("generationId", conflict.generationId());

@@ -46,6 +46,9 @@ public class SecurityConfiguration {
                         authorize.requestMatchers("/v3/api-docs", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**").permitAll();
                     }
+                    if (environment.acceptsProfiles(Profiles.of("dev", "test"))
+                            && !environment.acceptsProfiles(Profiles.of("prod")))
+                        authorize.requestMatchers("/actuator/metrics", "/actuator/metrics/**").permitAll();
                     authorize.requestMatchers("/api/v1/**").authenticated();
                     authorize.anyRequest().denyAll();
                 });

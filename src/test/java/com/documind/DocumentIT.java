@@ -188,6 +188,60 @@ class DocumentIT {
         return UUID.fromString(json.readTree(result.getResponse().getContentAsString()).get("id").asString());
     }
 
+    @Test void usageIsAccountScopedAndPreservesUnknownValues() throws Exception {
+        mvc.perform(get("/api/v1/usage")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/usage").header("Authorization", bearer(owner)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.questionCount").value(0))
+                .andExpect(jsonPath("$.promptTokens").value(0))
+                .andExpect(jsonPath("$.embeddingTokens").value(0));
+        jdbc.sql("INSERT INTO question_events(generation_id,user_id,created_at) VALUES (:id,:owner,now())")
+                .param("id", UUID.randomUUID()).param("owner", owner).update();
+        jdbc.sql("""
+                INSERT INTO usage_logs(id,user_id,operation,provider,model,prompt_tokens,completion_tokens,estimated_cost_usd,estimated)
+                VALUES (:id,:owner,'CHAT_ANSWER','GEMINI','test',10,5,0.01,true)
+                """).param("id", UUID.randomUUID()).param("owner", owner).update();
+        jdbc.sql("INSERT INTO usage_logs(id,user_id,operation,provider,model) VALUES (:id,:owner,'INGESTION_EMBEDDING','GEMINI','test')")
+                .param("id", UUID.randomUUID()).param("owner", owner).update();
+        jdbc.sql("INSERT INTO usage_logs(id,user_id,operation,provider,model,prompt_tokens) VALUES (:id,:owner,'CHAT_ANSWER','GEMINI','test',999)")
+                .param("id", UUID.randomUUID()).param("owner", other).update();
+        var result = mvc.perform(get("/api/v1/usage?userId=" + other).header("Authorization", bearer(owner)))
+                .andExpect(status().isOk()).andReturn();
+        var body = json.readTree(result.getResponse().getContentAsString());
+        assertThat(body.path("questionCount").asLong()).isEqualTo(1);
+        assertThat(body.path("promptTokens").asLong()).isEqualTo(10);
+        assertThat(body.path("completionTokens").asLong()).isEqualTo(5);
+        assertThat(body.path("embeddingTokens").isNull()).isTrue();
+        assertThat(body.path("estimatedCostUsd").isNull()).isTrue();
+        assertThat(body.path("estimated").asBoolean()).isTrue();
+        assertThat(body.path("periodStart").isTextual()).isTrue();
+        assertThat(body.path("periodEnd").isTextual()).isTrue();
+        mvc.perform(get("/api/v1/usage").header("Authorization", bearer(other)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.questionCount").value(0))
+                .andExpect(jsonPath("$.promptTokens").value(999));
+    }
+
+    @Test void uploadLimitIsPerUserAndInvalidUploadsDoNotConsumeSuccessQuota() throws Exception {
+        mvc.perform(multipart("/api/v1/documents").file(file("empty.txt", new byte[0]))
+                .header("Authorization", bearer(owner))).andExpect(status().isBadRequest());
+        for (int i = 0; i < 10; i++) upload();
+        mvc.perform(multipart("/api/v1/documents").file(file("eleventh.txt", "text".getBytes(StandardCharsets.UTF_8)))
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"))
+                .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
+        mvc.perform(multipart("/api/v1/documents").file(file("other.txt", "text".getBytes(StandardCharsets.UTF_8)))
+                .header("Authorization", bearer(other))).andExpect(status().isAccepted());
+    }
+
+    @Test void usageDoesNotReportZeroForUntrackedHistoricalEmbedding() throws Exception {
+        jdbc.sql("INSERT INTO usage_untracked_history(user_id) VALUES (:owner)").param("owner", owner).update();
+        var result = mvc.perform(get("/api/v1/usage").header("Authorization", bearer(owner)))
+                .andExpect(status().isOk()).andReturn();
+        var body = json.readTree(result.getResponse().getContentAsString());
+        assertThat(body.path("embeddingTokens").isNull()).isTrue();
+        assertThat(body.path("estimatedCostUsd").isNull()).isTrue();
+    }
+
     @Test void conversationsEnforceOwnershipAndPageMessages() throws Exception {
         var result = mvc.perform(post("/api/v1/conversations").header("Authorization", bearer(owner))
                 .contentType("application/json").content("{}"))

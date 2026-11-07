@@ -182,8 +182,20 @@ class LocalFoundationIT {
                 .andExpect(jsonPath("$.components").doesNotExist());
         mvc.perform(get("/actuator/health/readiness")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
+        mvc.perform(get("/actuator/metrics/documind.jobs.pending")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("documind.jobs.pending"));
         mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.info.title").value("DocuMind Backend"));
+                .andExpect(jsonPath("$.info.title").value("DocuMind Backend"))
+                .andExpect(jsonPath("$.paths['/api/v1/documents'].post.summary").value("Tải tài liệu lên để xử lý"))
+                .andExpect(jsonPath("$.paths['/api/v1/documents'].get.summary").value("Xem danh sách tài liệu của tôi"))
+                .andExpect(jsonPath("$.paths['/api/v1/documents/{id}'].get.summary").value("Xem chi tiết và trạng thái tài liệu"))
+                .andExpect(jsonPath("$.paths['/api/v1/documents/{id}'].delete.summary").value("Yêu cầu xóa tài liệu"))
+                .andExpect(jsonPath("$.paths['/api/v1/conversations'].post.summary").value("Tạo hội thoại mới"))
+                .andExpect(jsonPath("$.paths['/api/v1/conversations'].get.summary").value("Xem danh sách hội thoại của tôi"))
+                .andExpect(jsonPath("$.paths['/api/v1/conversations/{id}'].delete.summary").value("Xóa hội thoại"))
+                .andExpect(jsonPath("$.paths['/api/v1/conversations/{id}/messages'].get.summary").value("Xem lịch sử tin nhắn trong hội thoại"))
+                .andExpect(jsonPath("$.paths['/api/v1/conversations/{id}/messages'].post.summary").value("Gửi câu hỏi và nhận câu trả lời trực tuyến"))
+                .andExpect(jsonPath("$.paths['/api/v1/usage'].get.summary").value("Xem thống kê sử dụng của tôi"));
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
     }
 

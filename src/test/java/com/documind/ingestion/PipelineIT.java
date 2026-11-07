@@ -225,6 +225,8 @@ class PipelineIT {
         try {
             worker.poll(); await(() -> status(id).equals("READY"));
             assertThat(chunks(id)).isGreaterThan(0);
+            assertThat(jdbc.sql("SELECT count(*) FROM usage_logs l JOIN processing_jobs j ON j.id=l.job_id WHERE j.document_id=:id AND l.operation='INGESTION_EMBEDDING' AND l.embedding_tokens IS NULL")
+                    .param("id", id).query(Long.class).single()).isGreaterThan(0);
             assertThat(jdbc.sql("SELECT count(*) FROM document_chunks WHERE document_id=:id AND (paragraph_index IS NULL OR start_offset IS NULL OR end_offset IS NULL OR embedding_model<>'gemini-embedding-2' OR pipeline_version<>'phase7-gemini-v1')")
                     .param("id", id).query(Long.class).single()).isZero();
         } finally { worker.stop(); }
@@ -233,6 +235,8 @@ class PipelineIT {
         try {
             retryWorker.poll(); await(() -> jdbc.sql("SELECT attempts FROM processing_jobs WHERE document_id=:id").param("id", failed).query(Integer.class).single() == 1 && status(failed).equals("PENDING"));
             assertThat(chunks(failed)).isZero();
+            assertThat(jdbc.sql("SELECT count(*) FROM usage_logs l JOIN processing_jobs j ON j.id=l.job_id WHERE j.document_id=:id AND l.operation='INGESTION_EMBEDDING'")
+                    .param("id", failed).query(Long.class).single()).isEqualTo(1);
         } finally { retryWorker.stop(); }
         embeddings.fail.set(false); embeddings.rateLimited.set(true);
         UUID limited = save("limited.txt", "example".getBytes(StandardCharsets.UTF_8));
