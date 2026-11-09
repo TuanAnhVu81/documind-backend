@@ -1,2 +1,2 @@
-/** Tenant-scoped retrieval; implementation starts in Phase 7. */
+/** Tenant-scoped retrieval services, vector persistence and embedding provider. */
 package com.documind.retrieval;

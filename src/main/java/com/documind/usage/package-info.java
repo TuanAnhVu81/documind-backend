@@ -1,2 +1,2 @@
-/** Usage accounting and limits; implementation starts with the chat service. */
+/** Usage APIs, accounting services and persistence. */
 package com.documind.usage;

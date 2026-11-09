@@ -29,12 +29,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorCode error = exception.errorCode();
         var response = ResponseEntity.status(error.status()).header(HttpHeaders.CACHE_CONTROL, "no-store");
         if (error == ErrorCode.REFRESH_RACE) response.header(HttpHeaders.RETRY_AFTER, "1");
-        if (exception instanceof com.documind.chat.ChatRateLimiter.Limited limited)
+        if (exception instanceof com.documind.chat.service.ChatRateLimiter.Limited limited)
             response.header(HttpHeaders.RETRY_AFTER, Long.toString(limited.retryAfter()));
-        if (exception instanceof com.documind.document.UploadRateLimiter.Limited limited)
+        if (exception instanceof com.documind.document.service.UploadRateLimiter.Limited limited)
             response.header(HttpHeaders.RETRY_AFTER, Long.toString(limited.retryAfter()));
         var problem = Problems.create(error, request);
-        if (exception instanceof com.documind.chat.ChatConflict conflict) {
+        if (exception instanceof com.documind.chat.service.ChatConflict conflict) {
             if (conflict.generationId() != null) problem.setProperty("generationId", conflict.generationId());
             if (conflict.assistantMessageId() != null) problem.setProperty("assistantMessageId", conflict.assistantMessageId());
             if (conflict.generationStatus() != null) problem.setProperty("status", conflict.generationStatus());

@@ -1,2 +1,2 @@
-/** Authentication and authorization; implementation starts in Phase 3. */
+/** Authentication APIs, application services, persistence, DTOs and security. */
 package com.documind.auth;

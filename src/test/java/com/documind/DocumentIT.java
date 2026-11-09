@@ -1,17 +1,17 @@
 package com.documind;
 
 import com.documind.auth.security.AccessTokens;
-import com.documind.document.DocumentMaintenance;
-import com.documind.document.DocumentService;
-import com.documind.document.FileStorage;
-import com.documind.document.LocalFileStorage;
-import com.documind.chat.ChatProvider;
-import com.documind.chat.ChatTurnService;
-import com.documind.chat.ConversationService;
-import com.documind.chat.QueryResolver;
-import com.documind.chat.RagAnswerEngine;
-import com.documind.retrieval.ChunkVectorStore;
-import com.documind.retrieval.RetrievalService;
+import com.documind.document.service.DocumentMaintenance;
+import com.documind.document.service.DocumentService;
+import com.documind.document.storage.FileStorage;
+import com.documind.document.storage.LocalFileStorage;
+import com.documind.chat.provider.ChatProvider;
+import com.documind.chat.service.ChatTurnService;
+import com.documind.chat.service.ConversationService;
+import com.documind.chat.rag.QueryResolver;
+import com.documind.chat.rag.RagAnswerEngine;
+import com.documind.retrieval.repository.ChunkVectorStore;
+import com.documind.retrieval.service.RetrievalService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -78,9 +78,9 @@ class DocumentIT {
     @Autowired FailingStorage storage;
     @Autowired ConversationService conversations;
     @Autowired ChatTurnService actualChat;
-    @Autowired com.documind.chat.GenerationRecovery generationRecovery;
-    @Autowired com.documind.chat.ChatAdmissionService chatAdmission;
-    @Autowired com.documind.chat.GenerationLifecycle generationLifecycle;
+    @Autowired com.documind.chat.service.GenerationRecovery generationRecovery;
+    @Autowired com.documind.chat.service.ChatAdmissionService chatAdmission;
+    @Autowired com.documind.chat.service.GenerationLifecycle generationLifecycle;
     @Autowired TestChatProvider testChatProvider;
     @org.springframework.boot.test.web.server.LocalServerPort int serverPort;
     @Autowired DocumentService documents;
@@ -291,12 +291,12 @@ class DocumentIT {
 
     @Test void admissionReplayDoesNotCreateAnotherGenerationOrUseProvider() throws Exception {
         UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
         var first = chatAdmission.admit(owner, conversation, key, request);
         assertThat(first.started()).isNotNull();
         assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, request))
-                .isInstanceOf(com.documind.chat.ChatConflict.class)
-                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                .isInstanceOf(com.documind.chat.service.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.service.ChatConflict) error).errorCode())
                         .isEqualTo(com.documind.common.error.ErrorCode.GENERATION_IN_PROGRESS));
         mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
                 .header("Idempotency-Key", key).contentType("application/json").accept("text/event-stream")
@@ -309,10 +309,10 @@ class DocumentIT {
         assertThat(generationLifecycle.snapshot(owner, conversation, first.started().assistant()).message().outcome()).isEqualTo("NO_EVIDENCE");
         var replay = chatAdmission.admit(owner, conversation, key, request);
         assertThat(replay.replay().generation()).isEqualTo(first.started().generation());
-        var changed = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Changed?\"}"), json);
+        var changed = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Changed?\"}"), json);
         assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, changed))
-                .isInstanceOf(com.documind.chat.ChatConflict.class)
-                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                .isInstanceOf(com.documind.chat.service.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.service.ChatConflict) error).errorCode())
                         .isEqualTo(com.documind.common.error.ErrorCode.IDEMPOTENCY_KEY_REUSED));
         assertThatThrownBy(() -> chatAdmission.admit(other, conversation, key, request)).isInstanceOf(com.documind.common.error.AppException.class);
         assertThat(jdbc.sql("SELECT count(*) FROM chat_generations").query(Long.class).single()).isEqualTo(1);
@@ -322,7 +322,7 @@ class DocumentIT {
     @Test void directPhaseEightTurnUsesSameCanonicalHashAsSseAdmission() {
         UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
         actualChat.process(owner, conversation, key, "Question?", RetrievalService.Scope.ALL_READY, null);
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
         assertThat(chatAdmission.admit(owner, conversation, key, request).replay()).isNotNull();
         var legacy = new java.util.LinkedHashMap<String, Object>();
         legacy.put("documentIds", List.of()); legacy.put("scope_mode", "ALL_READY"); legacy.put("content", "Question?");
@@ -366,8 +366,8 @@ class DocumentIT {
                   content,embedding,embedding_model,pipeline_version)
                 VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
                 """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
-                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
-                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+                .param("model", com.documind.retrieval.provider.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.provider.GeminiEmbeddingModel.PIPELINE_VERSION).update();
         UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
         testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
         testChatProvider.provisional = "Điều kiện.";
@@ -395,13 +395,13 @@ class DocumentIT {
 
     @Test void incompleteGenerationCannotReplayAndNewKeyCanRetry() {
         UUID conversation = conversations.create(owner, null).id(), key = UUID.randomUUID();
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
         var accepted = chatAdmission.admit(owner, conversation, key, request);
         assertThat(generationLifecycle.terminate(accepted.started().generation(), 0, "CLIENT_DISCONNECTED", "partial")).isTrue();
         assertThat(generationLifecycle.terminate(accepted.started().generation(), 0, "TIMEOUT", "wrong")).isFalse();
         assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, key, request))
-                .isInstanceOf(com.documind.chat.ChatConflict.class)
-                .satisfies(error -> assertThat(((com.documind.chat.ChatConflict) error).errorCode())
+                .isInstanceOf(com.documind.chat.service.ChatConflict.class)
+                .satisfies(error -> assertThat(((com.documind.chat.service.ChatConflict) error).errorCode())
                         .isEqualTo(com.documind.common.error.ErrorCode.GENERATION_NOT_REPLAYABLE));
         assertThat(chatAdmission.admit(owner, conversation, UUID.randomUUID(), request).started()).isNotNull();
         var message = conversations.messages(owner, conversation, null, 50).items().get(1);
@@ -418,8 +418,8 @@ class DocumentIT {
                   content,embedding,embedding_model,pipeline_version)
                 VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
                 """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
-                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
-                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+                .param("model", com.documind.retrieval.provider.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.provider.GeminiEmbeddingModel.PIPELINE_VERSION).update();
         UUID conversation = conversations.create(owner, null).id();
         testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
         var result = mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
@@ -447,8 +447,8 @@ class DocumentIT {
                   content,embedding,embedding_model,pipeline_version)
                 VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
                 """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
-                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
-                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+                .param("model", com.documind.retrieval.provider.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.provider.GeminiEmbeddingModel.PIPELINE_VERSION).update();
         UUID conversation = conversations.create(owner, null).id();
         testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
         testChatProvider.floodAfterRelease = true;
@@ -486,13 +486,13 @@ class DocumentIT {
                   content,embedding,embedding_model,pipeline_version)
                 VALUES (:id,:doc,:owner,0,1,0,4,'fact',array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
                 """).param("id", UUID.randomUUID()).param("doc", document).param("owner", owner)
-                .param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
-                .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+                .param("model", com.documind.retrieval.provider.GeminiEmbeddingModel.MODEL)
+                .param("pipeline", com.documind.retrieval.provider.GeminiEmbeddingModel.PIPELINE_VERSION).update();
         UUID conversation = conversations.create(owner, null).id();
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"What?\",\"documentIds\":[\"" + document + "\"]}"), json);
         var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
         testChatProvider.release = new java.util.concurrent.CountDownLatch(1);
-        var service = new com.documind.chat.ChatStreamService(actualChat, generationLifecycle, 50, 1_500, json);
+        var service = new com.documind.chat.service.ChatStreamService(actualChat, generationLifecycle, 50, 1_500, json);
         try {
             service.open(owner, conversation, request, accepted, "timeout-test");
             assertThat(testChatProvider.emitted.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
@@ -513,14 +513,14 @@ class DocumentIT {
     }
 
     @Test void concurrentAdmissionNeverAcceptsMoreThanTwentyPerUser() throws Exception {
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
         var conversations = new java.util.ArrayList<UUID>();
         for (int i = 0; i < 30; i++) conversations.add(this.conversations.create(owner, null).id());
         var accepted = new java.util.concurrent.atomic.AtomicInteger();
         try (var pool = java.util.concurrent.Executors.newFixedThreadPool(8)) {
             var tasks = conversations.stream().<java.util.concurrent.Callable<Void>>map(id -> () -> {
                 try { chatAdmission.admit(owner, id, UUID.randomUUID(), request); accepted.incrementAndGet(); }
-                catch (com.documind.chat.ChatRateLimiter.Limited ignored) { }
+                catch (com.documind.chat.service.ChatRateLimiter.Limited ignored) { }
                 return null;
             }).toList();
             for (var future : pool.invokeAll(tasks)) future.get();
@@ -531,7 +531,7 @@ class DocumentIT {
 
     @Test void replayBypassesFullRateLimitWithoutCreatingAnotherQuestion() throws Exception {
         UUID conversation = conversations.create(owner, null).id();
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"Question?\"}"), json);
         UUID firstKey = UUID.randomUUID();
         for (int i = 0; i < 20; i++) {
             var accepted = chatAdmission.admit(owner, conversation, i == 0 ? firstKey : UUID.randomUUID(), request);
@@ -539,7 +539,7 @@ class DocumentIT {
         }
         assertThat(chatAdmission.admit(owner, conversation, firstKey, request).replay()).isNotNull();
         assertThatThrownBy(() -> chatAdmission.admit(owner, conversation, UUID.randomUUID(), request))
-                .isInstanceOf(com.documind.chat.ChatRateLimiter.Limited.class);
+                .isInstanceOf(com.documind.chat.service.ChatRateLimiter.Limited.class);
         mvc.perform(post("/api/v1/conversations/" + conversation + "/messages").header("Authorization", bearer(owner))
                 .header("Idempotency-Key", UUID.randomUUID()).contentType("application/json").accept("text/event-stream")
                 .content("{\"content\":\"Question?\"}"))
@@ -559,8 +559,8 @@ class DocumentIT {
                       content,embedding,embedding_model,pipeline_version)
                     VALUES (:id,:doc,:owner,0,1,0,4,:content,array_fill(1::real,ARRAY[1536])::vector,:model,:pipeline)
                     """).param("id", UUID.randomUUID()).param("doc", doc).param("owner", doc.equals(foreign) ? other : owner)
-                    .param("content", "text-" + doc).param("model", com.documind.retrieval.GeminiEmbeddingModel.MODEL)
-                    .param("pipeline", com.documind.retrieval.GeminiEmbeddingModel.PIPELINE_VERSION).update();
+                    .param("content", "text-" + doc).param("model", com.documind.retrieval.provider.GeminiEmbeddingModel.MODEL)
+                    .param("pipeline", com.documind.retrieval.provider.GeminiEmbeddingModel.PIPELINE_VERSION).update();
         }
         var embedding = org.mockito.Mockito.mock(org.springframework.ai.embedding.EmbeddingModel.class);
         float[] vector = new float[1536]; java.util.Arrays.fill(vector, 1);
@@ -773,7 +773,7 @@ class DocumentIT {
         var first = chatService(document, (system, input) -> new ChatProvider.Reply("Secret [S1].", 1L, 1L));
         assertThat(first.process(owner, conversation, UUID.randomUUID(), "First?", RetrievalService.Scope.SELECTED,
                 List.of(document)).outcome()).isEqualTo("ANSWER");
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
         var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
         documents.requestDeletion(owner, document);
         assertThat(generationLifecycle.state(accepted.started().generation()).outcome()).isEqualTo("SOURCE_DELETED");
@@ -788,7 +788,7 @@ class DocumentIT {
         UUID conversation = conversations.create(owner, null).id();
         var first = chatService(document, (system, input) -> new ChatProvider.Reply("Secret [S1].", 1L, 1L));
         first.process(owner, conversation, UUID.randomUUID(), "First?", RetrievalService.Scope.SELECTED, List.of(document));
-        var request = com.documind.chat.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
+        var request = com.documind.chat.service.ChatRequest.parse(json.readTree("{\"content\":\"And the second?\"}"), json);
         var accepted = chatAdmission.admit(owner, conversation, UUID.randomUUID(), request);
         var entered = new java.util.concurrent.CountDownLatch(1);
         var release = new java.util.concurrent.CountDownLatch(1);

@@ -1,2 +1,2 @@
-/** PostgreSQL job queue and ingestion pipeline; implementation starts in Phase 5. */
+/** PostgreSQL job persistence, queue processing and ingestion pipeline. */
 package com.documind.ingestion;

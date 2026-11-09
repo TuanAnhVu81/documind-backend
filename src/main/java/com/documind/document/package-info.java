@@ -1,2 +1,2 @@
-/** Document ownership and file storage; implementation starts in Phase 4. */
+/** Document APIs, ownership, persistence and file storage. */
 package com.documind.document;

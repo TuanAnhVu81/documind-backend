@@ -1,2 +1,2 @@
-/** Conversations, grounded answers and streaming; implementation starts in Phase 8. */
+/** Conversation APIs, application services, persistence, RAG and model providers. */
 package com.documind.chat;
