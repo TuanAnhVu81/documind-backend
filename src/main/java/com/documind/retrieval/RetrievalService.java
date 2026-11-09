@@ -25,6 +25,8 @@ public class RetrievalService {
     private final TransactionTemplate selectedTx;
     private final io.micrometer.core.instrument.Timer searchTimer;
     private io.micrometer.core.instrument.Counter embeddingFailures;
+    @Value("${documind.retrieval.hybrid-enabled:false}")
+    private boolean hybridEnabled;
 
     @org.springframework.beans.factory.annotation.Autowired
     void configureMetrics(io.micrometer.core.instrument.MeterRegistry registry) {
@@ -77,14 +79,19 @@ public class RetrievalService {
             throw new GeminiEmbeddingModel.InvalidEmbedding();
         float[] embedding = results.getFirst().getOutput();
         if (scope == Scope.ALL_READY)
-            return vectors.search(owner, null, embedding, topK, GeminiEmbeddingModel.MODEL, minScore);
+            return searchCandidates(owner, null, question, embedding);
         // Lock the selected documents only after the remote call; DELETE uses conflicting row locks.
         return selectedTx.execute(status -> {
             jdbc.sql("SELECT id FROM documents WHERE user_id=:owner AND id IN (:ids) ORDER BY id FOR SHARE")
                     .param("owner", owner).param("ids", ids).query(UUID.class).list();
             validate(owner, scope, ids);
-            return vectors.search(owner, ids, embedding, topK, GeminiEmbeddingModel.MODEL, minScore);
+            return searchCandidates(owner, ids, question, embedding);
         });
+    }
+
+    private List<ChunkVectorStore.Hit> searchCandidates(UUID owner, List<UUID> ids, String question, float[] embedding) {
+        if (!hybridEnabled) return vectors.search(owner, ids, embedding, topK, GeminiEmbeddingModel.MODEL, minScore);
+        return vectors.hybridSearch(owner, ids, embedding, question, topK, GeminiEmbeddingModel.MODEL, minScore);
     }
 
     public void validate(UUID owner, Scope scope, List<UUID> ids) {

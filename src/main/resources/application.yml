@@ -88,6 +88,10 @@ documind:
     enabled: false
   retrieval:
     top-k: 5
+    hybrid-enabled: ${RETRIEVAL_HYBRID_ENABLED:false}
+    rerank-enabled: ${RETRIEVAL_RERANK_ENABLED:false}
+    # Disable only for evaluation ablation; multi-turn resolution is required for release.
+    rewrite-enabled: ${RETRIEVAL_REWRITE_ENABLED:true}
     # Baseline only; must be calibrated on the approved evaluation set.
     min-score: -1
   ingestion:

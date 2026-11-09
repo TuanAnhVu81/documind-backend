@@ -1,6 +1,6 @@
 # Rà soát bộ câu hỏi DocuMind — questions-vi-v3
 
-Trạng thái: **APPROVED**. Người duyệt: Tuấn Anh. Chưa tự đánh dấu APPROVED.
+Trạng thái: **APPROVED**. Người duyệt: Tuấn Anh, xác nhận khóa bộ questions-vi-v3 ngày 2026-11-09.
 
 ## Các thay đổi để duyệt
 

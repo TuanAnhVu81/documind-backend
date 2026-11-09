@@ -1,6 +1,6 @@
 {
   "evaluationVersion": "questions-vi-v3",
-  "reviewStatus": "PENDING_REVIEW",
+  "reviewStatus": "APPROVED",
   "method": "static_template_review_and_full_corpus_lexical_scan",
   "checkedDocumentFixtureIds": [
     "handbook-01",

@@ -25,7 +25,12 @@ public class ChatTurnService {
     private final RagAnswerEngine answerEngine;
     private final ObjectProvider<ChatProvider> providers;
     private final JsonMapper json;
+    private final GeminiReranker reranker;
     private io.micrometer.core.instrument.Counter providerFailures;
+    @org.springframework.beans.factory.annotation.Value("${documind.retrieval.rerank-enabled:false}")
+    private boolean rerankEnabled;
+    @org.springframework.beans.factory.annotation.Value("${documind.retrieval.rewrite-enabled:true}")
+    private boolean rewriteEnabled = true;
 
     @org.springframework.beans.factory.annotation.Autowired
     void configureMetrics(io.micrometer.core.instrument.MeterRegistry registry) {
@@ -36,6 +41,7 @@ public class ChatTurnService {
             QueryResolver resolver, RagAnswerEngine answerEngine, ObjectProvider<ChatProvider> providers, JsonMapper json) {
         this.jdbc = jdbc; this.tx = new TransactionTemplate(manager); this.retrieval = retrieval;
         this.resolver = resolver; this.answerEngine = answerEngine; this.providers = providers; this.json = json;
+        this.reranker = new GeminiReranker(json);
     }
 
     public record Result(UUID generationId, UUID assistantMessageId, String status, String outcome, String content) {}
@@ -61,7 +67,8 @@ public class ChatTurnService {
         ChatProvider provider = providers.getIfAvailable();
         try {
             ChatProvider rewrite = recording(provider, owner, started.generation(), started.assistant(), "CHAT_REWRITE");
-            var resolution = resolver.resolve(question, started.history(), rewrite);
+            var resolution = rewriteEnabled ? resolver.resolve(question, started.history(), rewrite)
+                    : new QueryResolver.Resolution(question, null, null, null);
             if (resolution.clarification() != null)
                 return finish(owner, started, List.of(), "COMPLETE", "CLARIFICATION_REQUIRED", resolution.clarification(), List.of());
             List<ChunkVectorStore.Hit> hits = retrieval.search(owner, resolution.question(), scope, documentIds,
@@ -69,6 +76,12 @@ public class ChatTurnService {
             List<UUID> docs = hits.stream().map(ChunkVectorStore.Hit::documentId).distinct().sorted().toList();
             if (!registerContext(owner, started, docs))
                 return finish(owner, started, List.of(), "INCOMPLETE", "SOURCE_DELETED", "", List.of());
+            if (rerankEnabled) {
+                hits = reranker.rerank(resolution.question(), hits,
+                        recording(provider, owner, started.generation(), started.assistant(), "CHAT_RERANK"));
+                if (!registerContext(owner, started, docs))
+                    return finish(owner, started, List.of(), "INCOMPLETE", "SOURCE_DELETED", "", List.of());
+            }
             var response = answerEngine.answer(question, resolution.question(), hits, SafeResponses.noEvidence(question),
                     SafeResponses.invalidCitation(question),
                     recording(provider, owner, started.generation(), started.assistant(), "CHAT_ANSWER"), tokens);

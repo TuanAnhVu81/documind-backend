@@ -472,6 +472,42 @@ class PipelineIT {
                 .satisfies(e -> assertThat(((com.documind.common.error.AppException)e).errorCode()).isEqualTo(com.documind.common.error.ErrorCode.DOCUMENT_NOT_READY));
     }
 
+    @Test void keywordCandidatesRespectTenantScopeDeletionAndModel() throws Exception {
+        UUID first = save("one.txt", "Điều kiện hoàn tiền trong bảy ngày".getBytes(StandardCharsets.UTF_8));
+        UUID second = save("two.txt", "Chính sách hoàn tiền trong ba ngày".getBytes(StandardCharsets.UTF_8));
+        var worker = new IngestionWorker(queue, pipeline(60), 2, 120, 20, 600);
+        try { worker.poll(); await(() -> status(first).equals("READY") && status(second).equals("READY")); }
+        finally { worker.stop(); }
+        UUID other = UUID.randomUUID();
+        jdbc.sql("INSERT INTO users(id,email,password_hash) VALUES (:id,:email,'fixture')")
+                .param("id", other).param("email", other + "@example.com").update();
+        UUID foreign = UUID.randomUUID();
+        jdbc.sql("INSERT INTO documents(id,user_id,filename,storage_key,media_type,size_bytes,status) VALUES (:id,:owner,'other.txt',:key,'text/plain',1,'READY')")
+                .param("id", foreign).param("owner", other).param("key", UUID.randomUUID().toString()).update();
+        jdbc.sql("""
+                INSERT INTO document_chunks(id,document_id,user_id,chunk_index,paragraph_index,start_offset,end_offset,content,embedding,embedding_model,pipeline_version)
+                SELECT gen_random_uuid(),:foreign,:owner,chunk_index,paragraph_index,start_offset,end_offset,content,embedding,embedding_model,pipeline_version
+                FROM document_chunks WHERE document_id=:source
+                """).param("foreign", foreign).param("owner", other).param("source", first).update();
+        float[] vector = new float[1536]; vector[0] = 1; vector[1] = 1;
+        var hits = vectorStore.searchKeywords(owner, null, vector, "hoàn tiền", 10, "gemini-embedding-2", -1);
+        assertThat(hits).extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId)
+                .containsExactlyInAnyOrder(first, second).doesNotContain(foreign);
+        org.springframework.test.util.ReflectionTestUtils.setField(retrieval, "hybridEnabled", true);
+        try {
+            assertThat(retrieval.search(owner, "hoàn tiền", com.documind.retrieval.RetrievalService.Scope.ALL_READY, null))
+                    .extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId)
+                    .containsExactlyInAnyOrder(first, second).doesNotContain(foreign);
+        } finally { org.springframework.test.util.ReflectionTestUtils.setField(retrieval, "hybridEnabled", false); }
+        assertThat(vectorStore.searchKeywords(owner, List.of(second), vector, "hoàn tiền", 10, "gemini-embedding-2", -1))
+                .extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId).containsExactly(second);
+        jdbc.sql("UPDATE documents SET status='DELETING' WHERE id=:id").param("id", second).update();
+        jdbc.sql("UPDATE document_chunks SET pipeline_version='old' WHERE document_id=:id").param("id", first).update();
+        assertThat(vectorStore.searchKeywords(owner, null, vector, "hoàn tiền", 10, "gemini-embedding-2", -1)).isEmpty();
+        assertThat(vectorStore.searchKeywords(other, null, vector, "hoàn tiền", 10, "gemini-embedding-2", -1))
+                .extracting(com.documind.retrieval.ChunkVectorStore.Hit::documentId).containsExactly(foreign);
+    }
+
     @Test void emptyAllReadyDoesNotCallEmbedding() {
         embeddings.fail.set(true);
         assertThat(retrieval.search(owner, "câu hỏi", com.documind.retrieval.RetrievalService.Scope.ALL_READY, null)).isEmpty();
@@ -562,7 +598,7 @@ class PipelineIT {
         jdbc.sql("ANALYZE document_chunks").update();
         float[] query = new float[1536]; query[0] = 1; query[1] = 0.5f;
         String vector = "[1,0.5" + ",0".repeat(1534) + "]";
-        long[] exactTimes = new long[100], approximateTimes = new long[100];
+        long[] exactTimes = new long[100], approximateTimes = new long[100], hybridTimes = new long[100];
         int exactCount = 0, annCount = 0, overlap = 0;
         try (var connection = dataSource.getConnection(); var statement = connection.createStatement()) {
             connection.setAutoCommit(false);
@@ -579,19 +615,23 @@ class PipelineIT {
                 var exact = vectorStore.search(owner, null, query, 5, "gemini-embedding-2", -1);
                 long exactElapsed = System.nanoTime() - start;
                 start = System.nanoTime();
+                var hybrid = vectorStore.hybridSearch(owner, null, query, "x", 5, "gemini-embedding-2", -1);
+                long hybridElapsed = System.nanoTime() - start;
+                assertThat(hybrid).hasSize(5);
+                start = System.nanoTime();
                 var ann = new ArrayList<UUID>();
                 try (var rows = statement.executeQuery(sql)) { while (rows.next()) ann.add(rows.getObject(1, UUID.class)); }
                 long annElapsed = System.nanoTime() - start;
-                if (i >= 10) { exactTimes[i-10] = exactElapsed; approximateTimes[i-10] = annElapsed; }
+                if (i >= 10) { exactTimes[i-10] = exactElapsed; approximateTimes[i-10] = annElapsed; hybridTimes[i-10] = hybridElapsed; }
                 exactCount = exact.size(); annCount = ann.size();
                 var ids = exact.stream().map(com.documind.retrieval.ChunkVectorStore.Hit::id).toList();
                 overlap = (int) ann.stream().filter(ids::contains).count();
             }
             connection.rollback();
         }
-        java.util.Arrays.sort(exactTimes); java.util.Arrays.sort(approximateTimes);
-        System.out.printf("BENCH exact_p95_ms=%.2f hnsw_p95_ms=%.2f exact_count=%d hnsw_count=%d overlap=%d/5%n",
-                exactTimes[94] / 1e6, approximateTimes[94] / 1e6, exactCount, annCount, overlap);
+        java.util.Arrays.sort(exactTimes); java.util.Arrays.sort(approximateTimes); java.util.Arrays.sort(hybridTimes);
+        System.out.printf("BENCH exact_p95_ms=%.2f hybrid_p95_ms=%.2f hnsw_p95_ms=%.2f exact_count=%d hnsw_count=%d overlap=%d/5%n",
+                exactTimes[94] / 1e6, hybridTimes[94] / 1e6, approximateTimes[94] / 1e6, exactCount, annCount, overlap);
         assertThat(exactCount).isEqualTo(5);
     }
 }

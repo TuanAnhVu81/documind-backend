@@ -610,6 +610,65 @@ class DocumentIT {
                 .path("availability").asString()).isEqualTo("DELETED");
     }
 
+    @Test void rerankUsesRegisteredCandidatesAndRecordsSeparateUsage() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        var retrieval = org.mockito.Mockito.mock(RetrievalService.class);
+        var first = new ChunkVectorStore.Hit(UUID.randomUUID(), document, "source.txt", 0, null, 1, 0, 5, "first", 0.1);
+        var second = new ChunkVectorStore.Hit(UUID.randomUUID(), document, "source.txt", 1, null, 1, 6, 12, "second", 0.2);
+        org.mockito.Mockito.when(retrieval.search(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> {
+                    ((Runnable) call.getArgument(4)).run();
+                    return List.of(first, second);
+                });
+        var providers = new org.springframework.beans.factory.support.StaticListableBeanFactory();
+        providers.addBean("fakeChat", (ChatProvider) (system, input) -> system.contains("Rank the supplied passages")
+                ? new ChatProvider.Reply("{\"order\":[1,0]}", 12L, 3L)
+                : new ChatProvider.Reply("Fact [S1].", 10L, 4L));
+        var chat = new ChatTurnService(jdbc, transactionManager, retrieval, queryResolver, answerEngine,
+                providers.getBeanProvider(ChatProvider.class), json);
+        org.springframework.test.util.ReflectionTestUtils.setField(chat, "rerankEnabled", true);
+        UUID conversation = conversations.create(owner, null).id();
+        var result = chat.process(owner, conversation, UUID.randomUUID(), "Question?", RetrievalService.Scope.SELECTED, List.of(document));
+        assertThat(result.outcome()).isEqualTo("ANSWER");
+        assertThat(conversations.messages(owner, conversation, null, 50).items().getLast().sources().path(0)
+                .path("snippet").asString()).isEqualTo("second");
+        assertThat(jdbc.sql("SELECT operation FROM usage_logs ORDER BY created_at,id").query(String.class).list())
+                .containsExactly("QUERY_EMBEDDING", "CHAT_RERANK", "CHAT_ANSWER");
+    }
+
+    @Test void deletionDuringRerankPreventsAnswerAndKeepsUsage() throws Exception {
+        UUID document = upload();
+        jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
+        var retrieval = org.mockito.Mockito.mock(RetrievalService.class);
+        var first = new ChunkVectorStore.Hit(UUID.randomUUID(), document, "source.txt", 0, null, 1, 0, 5, "first", 0.1);
+        var second = new ChunkVectorStore.Hit(UUID.randomUUID(), document, "source.txt", 1, null, 1, 6, 12, "second", 0.2);
+        org.mockito.Mockito.when(retrieval.search(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> {
+                    ((Runnable) call.getArgument(4)).run();
+                    return List.of(first, second);
+                });
+        var calls = new java.util.concurrent.atomic.AtomicInteger();
+        var providers = new org.springframework.beans.factory.support.StaticListableBeanFactory();
+        providers.addBean("fakeChat", (ChatProvider) (system, input) -> {
+            calls.incrementAndGet();
+            documents.requestDeletion(owner, document);
+            return new ChatProvider.Reply("{\"order\":[1,0]}", 12L, 3L);
+        });
+        var chat = new ChatTurnService(jdbc, transactionManager, retrieval, queryResolver, answerEngine,
+                providers.getBeanProvider(ChatProvider.class), json);
+        org.springframework.test.util.ReflectionTestUtils.setField(chat, "rerankEnabled", true);
+        UUID conversation = conversations.create(owner, null).id();
+        var result = chat.process(owner, conversation, UUID.randomUUID(), "Question?", RetrievalService.Scope.SELECTED, List.of(document));
+        assertThat(result.status()).isEqualTo("INCOMPLETE");
+        assertThat(result.outcome()).isEqualTo("SOURCE_DELETED");
+        assertThat(calls).hasValue(1);
+        assertThat(jdbc.sql("SELECT operation FROM usage_logs ORDER BY created_at,id").query(String.class).list())
+                .containsExactly("QUERY_EMBEDDING", "CHAT_RERANK");
+    }
+
     @Test void chatDiscardsAnswerIfSourceDeletedDuringProviderCall() throws Exception {
         UUID document = upload();
         jdbc.sql("UPDATE documents SET status='READY' WHERE id=:id").param("id", document).update();
