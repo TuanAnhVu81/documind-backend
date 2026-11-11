@@ -8,6 +8,14 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 class QueryResolverTest {
+    @Test void acceptsJsonWrappedInMarkdownCodeFence() {
+        var resolver = new QueryResolver(JsonMapper.builder().build());
+        var history = List.of(new QueryResolver.Turn("Earlier question", "Answer [S1]", "COMPLETE", "ANSWER", true));
+        ChatProvider model = (system, input) -> new ChatProvider.Reply(
+                "```json\n{\"question\":\"Standalone question\",\"clarification\":null}\n```", 20L, 10L);
+        assertThat(resolver.resolve("Follow-up?", history, model).question()).isEqualTo("Standalone question");
+    }
+
     @Test void excludesDeletedAndFailedHistoryAndAllowsClarification() {
         var resolver = new QueryResolver(JsonMapper.builder().build());
         var history = List.of(new QueryResolver.Turn("cũ", "bí mật", "COMPLETE", "ANSWER", false),

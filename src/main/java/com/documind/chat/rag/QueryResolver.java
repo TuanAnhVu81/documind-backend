@@ -43,7 +43,7 @@ public class QueryResolver {
         var response = provider.complete(SYSTEM, json.writeValueAsString(Map.of("history", selected, "question", question,
                 "missingPriorContext", missing)));
         try {
-            var result = json.readTree(response.text());
+            var result = json.readTree(unwrapJsonFence(response.text()));
             String standalone = textOrNull(result.path("question"));
             String clarification = textOrNull(result.path("clarification"));
             if ((standalone == null) == (clarification == null)) throw new GeminiChatProvider.ProviderException();
@@ -53,6 +53,16 @@ public class QueryResolver {
             return new Resolution(standalone, clarification == null ? null : SafeResponses.clarification(question),
                     response.promptTokens(), response.completionTokens());
         } catch (RuntimeException invalid) { throw new GeminiChatProvider.ProviderException(); }
+    }
+
+    private static String unwrapJsonFence(String text) {
+        String value = text.strip();
+        if (!value.startsWith("```")) return value;
+        int lineEnd = value.indexOf('\n');
+        if (lineEnd < 0 || !value.endsWith("```")) return value;
+        String language = value.substring(3, lineEnd).strip();
+        if (!language.isEmpty() && !"json".equalsIgnoreCase(language)) return value;
+        return value.substring(lineEnd + 1, value.length() - 3).strip();
     }
 
     private List<Turn> select(List<Turn> history) {
