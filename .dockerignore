@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+.local
+.env
+.env.*
+uploads
+target/*
+!target/documind-backend-0.0.1-SNAPSHOT.jar
+docs
+eval
+*.log

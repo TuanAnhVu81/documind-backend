@@ -1,7 +1,38 @@
 services:
+  app:
+    profiles: [standalone-app]
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://db:5432/documind
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:-}
+      AUTH_ALLOWED_ORIGINS: ${AUTH_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:8080}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DOCUMIND_GEMINI_ENABLED: ${DOCUMIND_GEMINI_ENABLED:-false}
+      DOCUMIND_CHAT_ENABLED: ${DOCUMIND_CHAT_ENABLED:-false}
+      DOCUMIND_INGESTION_PIPELINE_ENABLED: ${DOCUMIND_INGESTION_PIPELINE_ENABLED:-false}
+      DOCUMIND_INGESTION_WORKER_ENABLED: ${DOCUMIND_INGESTION_WORKER_ENABLED:-false}
+    ports:
+      - "127.0.0.1:${DOCUMIND_APP_PORT:-8080}:8080"
+    volumes:
+      - documind_uploads:/app/uploads
+    mem_limit: 512m
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    restart: unless-stopped
   db:
     # Optional alternative for a new machine. The current setup reuses local_postgres.
-    profiles: [standalone-db]
+    profiles: [standalone-db, standalone-app]
     image: pgvector/pgvector:0.8.7-pg15
     environment:
       POSTGRES_DB: documind
@@ -19,3 +50,4 @@ services:
     restart: unless-stopped
 volumes:
   documind_postgres:
+  documind_uploads:
