@@ -1,0 +1,51 @@
+name: Publish verified backend image
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful Backend CI run ID for a push
+        required: true
+        type: string
+      commit_sha:
+        description: Full 40-character commit SHA of that CI run
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify CI run identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          EXPECTED_SHA: ${{ inputs.commit_sha }}
+        run: |
+          [[ "$CI_RUN_ID" =~ ^[0-9]+$ && "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID" > "$RUNNER_TEMP/ci-run.json"
+          jq -e --arg sha "$EXPECTED_SHA" '.conclusion == "success" and .event == "push" and .head_sha == $sha and .path == ".github/workflows/ci.yml"' "$RUNNER_TEMP/ci-run.json" > /dev/null
+      - name: Download image artifact from verified run
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image-${{ inputs.commit_sha }}
+          path: verified-image
+          run-id: ${{ inputs.ci_run_id }}
+          github-token: ${{ github.token }}
+      - name: Publish image by SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.commit_sha }}
+        run: |
+          set -euo pipefail
+          docker load --input verified-image/documind-backend-image.tar.gz
+          owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          image="ghcr.io/$owner/documind-backend:$EXPECTED_SHA"
+          docker image inspect "documind-backend:$EXPECTED_SHA" > /dev/null
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker tag "documind-backend:$EXPECTED_SHA" "$image"
+          docker push "$image"
+          docker logout ghcr.io
+          echo "Published $image; choose the registry digest in Render."

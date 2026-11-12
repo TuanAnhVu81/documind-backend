@@ -3,4 +3,8 @@ server:
 spring:
   lifecycle:
     timeout-per-shutdown-phase: 20s
+documind:
+  storage:
+    backend: database
+    max-bytes: ${DOCUMENT_STORAGE_MAX_BYTES:104857600}
 # No database credentials, API keys, public Swagger, or dev defaults here.

@@ -47,7 +47,7 @@ spring:
       pool:
         size: 3
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:${PORT:8080}}
   error:
     include-message: never
     include-stacktrace: never
@@ -110,6 +110,7 @@ documind:
     deadline-seconds: 600
     stop-grace-seconds: 10
   storage:
+    backend: ${DOCUMENT_STORAGE_BACKEND:local}
     path: ${DOCUMENT_STORAGE_PATH:./uploads}
     cleanup-interval-ms: 30000
     orphan-interval-ms: 3600000

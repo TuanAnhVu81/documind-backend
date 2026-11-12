@@ -19,6 +19,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Yêu cầu không thể được xử lý."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Yêu cầu không thể được xử lý."),
     FILE_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "Yêu cầu không thể được xử lý."),
+    STORAGE_CAPACITY_EXCEEDED(HttpStatus.INSUFFICIENT_STORAGE, "Dung lượng lưu trữ đã đầy."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Yêu cầu không thể được xử lý."),
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "Email đã được đăng ký."),
     LOGIN_INVALID(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không hợp lệ."),

@@ -168,7 +168,7 @@ class LocalFoundationIT {
     void contextMigratesPostgresAndSupportsVectorOperationsWithoutAiCredentials() {
         assertThat(jdbc.sql("SELECT extversion FROM pg_extension WHERE extname='vector'")
                 .query(String.class).single()).isEqualTo("0.8.7");
-        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("4");
+        assertThat(flyway.info().current().getVersion().toString()).isEqualTo("5");
         assertThat(jdbc.sql("SELECT '[1,2,3]'::vector <-> '[1,2,3]'::vector")
                 .query(Double.class).single()).isZero();
         assertThat(context.getBeansOfType(ChatModel.class)).isEmpty();
@@ -212,6 +212,84 @@ class LocalFoundationIT {
     void flywayCanValidateAndMigrateAgain() {
         flyway.validate();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
+    }
+
+    @Test
+    void databaseStoragePersistsBytesAndEnforcesCapacityAcrossConcurrentUploads() throws Exception {
+        var storage = new com.documind.document.storage.DatabaseFileStorage(jdbc, transactionManager, 10L * 1024 * 1024);
+        byte[] content = new byte[6 * 1024 * 1024];
+        Arrays.fill(content, (byte) 'x');
+        var start = new CountDownLatch(1);
+        try (var workers = Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<String> upload = () -> {
+                start.await();
+                try { return storage.store(new java.io.ByteArrayInputStream(content), "demo.txt").key(); }
+                catch (com.documind.common.error.AppException failure) {
+                    assertThat(failure.errorCode()).isEqualTo(com.documind.common.error.ErrorCode.STORAGE_CAPACITY_EXCEEDED);
+                    return null;
+                }
+            };
+            var first = workers.submit(upload);
+            var second = workers.submit(upload);
+            start.countDown();
+            var results = Arrays.asList(first.get(30, TimeUnit.SECONDS), second.get(30, TimeUnit.SECONDS));
+            assertThat(results.stream().filter(java.util.Objects::nonNull)).hasSize(1);
+            String key = results.stream().filter(java.util.Objects::nonNull).findFirst().orElseThrow();
+            try {
+                var restarted = new com.documind.document.storage.DatabaseFileStorage(jdbc, transactionManager, 10L * 1024 * 1024);
+                try (var input = restarted.open(key)) { assertThat(input.readAllBytes()).isEqualTo(content); }
+                assertThat(restarted.entries()).anyMatch(entry -> entry.key().equals(key));
+            } finally { storage.delete(key); }
+            assertThatThrownBy(() -> storage.open(key)).isInstanceOf(java.io.IOException.class);
+        }
+    }
+
+    @Test
+    void databaseStorageSupportsOwnershipDeletionAndOrphanCleanup() throws Exception {
+        var storage = new com.documind.document.storage.DatabaseFileStorage(jdbc, transactionManager, 100L * 1024 * 1024);
+        var service = new com.documind.document.service.DocumentService(jdbc, storage, transactionManager);
+        var maintenance = new com.documind.document.service.DocumentMaintenance(jdbc, storage, transactionManager);
+        UUID owner = UUID.randomUUID(), other = UUID.randomUUID();
+        jdbc.sql("INSERT INTO users(id,email,password_hash) VALUES (:a,:ae,'fixture'),(:b,:be,'fixture')")
+                .param("a", owner).param("ae", owner + "@example.test")
+                .param("b", other).param("be", other + "@example.test").update();
+        var orphan = storage.store(new java.io.ByteArrayInputStream("orphan".getBytes(StandardCharsets.UTF_8)), "orphan.txt");
+        try {
+            var upload = service.upload(owner, new org.springframework.mock.web.MockMultipartFile("file", "demo.txt", "text/plain", "demo".getBytes(StandardCharsets.UTF_8)));
+            String key = jdbc.sql("SELECT storage_key FROM documents WHERE id=:id").param("id", upload.id()).query(String.class).single();
+            assertThatThrownBy(() -> service.detail(other, upload.id()))
+                    .isInstanceOf(com.documind.common.error.AppException.class);
+            assertThatThrownBy(() -> service.requestDeletion(other, upload.id()))
+                    .isInstanceOf(com.documind.common.error.AppException.class);
+            jdbc.sql("UPDATE stored_files SET created_at=now()-interval '25 hours' WHERE storage_key=:id")
+                    .param("id", UUID.fromString(orphan.key())).update();
+            maintenance.sweepOrphans();
+            assertThatThrownBy(() -> storage.open(orphan.key())).isInstanceOf(java.io.IOException.class);
+            try (var input = storage.open(key)) { assertThat(input.readAllBytes()).isEqualTo("demo".getBytes(StandardCharsets.UTF_8)); }
+            service.requestDeletion(owner, upload.id());
+            maintenance.cleanupDue();
+            assertThatThrownBy(() -> storage.open(key)).isInstanceOf(java.io.IOException.class);
+            assertThatThrownBy(() -> service.detail(owner, upload.id())).isInstanceOf(com.documind.common.error.AppException.class);
+        } finally {
+            storage.delete(orphan.key());
+            jdbc.sql("DELETE FROM users WHERE id IN (:ids)").param("ids", List.of(owner, other)).update();
+        }
+    }
+
+    @Test
+    void databaseStorageValidatesFileTypeAndTenMebibyteBoundary() throws Exception {
+        var storage = new com.documind.document.storage.DatabaseFileStorage(jdbc, transactionManager, 100L * 1024 * 1024);
+        byte[] content = new byte[10 * 1024 * 1024];
+        Arrays.fill(content, (byte) 'x');
+        var stored = storage.store(new java.io.ByteArrayInputStream(content), "limit.txt");
+        try { assertThat(stored.size()).isEqualTo(content.length); }
+        finally { storage.delete(stored.key()); }
+        assertThatThrownBy(() -> storage.store(new java.io.ByteArrayInputStream(new byte[content.length + 1]), "oversized.txt"))
+                .isInstanceOf(com.documind.common.error.AppException.class)
+                .extracting("errorCode").isEqualTo(com.documind.common.error.ErrorCode.FILE_TOO_LARGE);
+        assertThatThrownBy(() -> storage.store(new java.io.ByteArrayInputStream("not a PDF".getBytes(StandardCharsets.UTF_8)), "bad.pdf"))
+                .isInstanceOf(com.documind.common.error.AppException.class)
+                .extracting("errorCode").isEqualTo(com.documind.common.error.ErrorCode.UNSUPPORTED_MEDIA_TYPE);
     }
 
     @Test

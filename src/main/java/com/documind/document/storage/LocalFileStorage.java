@@ -24,8 +24,10 @@ import javax.xml.stream.XMLStreamException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(name = "documind.storage.backend", havingValue = "local", matchIfMissing = true)
 public class LocalFileStorage implements FileStorage {
     private static final long MAX_BYTES = 10L * 1024 * 1024;
     private final Path root;
@@ -68,7 +70,7 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
-    private static String extension(String filename) {
+    static String extension(String filename) {
         if (filename == null || filename.isBlank() || filename.length() > 255 || filename.contains("/")
                 || filename.contains("\\") || filename.contains("..") || filename.chars().anyMatch(Character::isISOControl))
             throw new AppException(ErrorCode.INVALID_REQUEST);
@@ -77,7 +79,7 @@ public class LocalFileStorage implements FileStorage {
         return filename.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
-    private static String detect(Path path, String extension) throws IOException {
+    static String detect(Path path, String extension) throws IOException {
         byte[] bytes = Files.readAllBytes(path); // bounded to 10 MiB; no document extraction
         if (extension.equals("pdf") && looksLikePdf(bytes)) return "application/pdf";
         if (extension.equals("docx") && bytes.length >= 4 && bytes[0] == 'P' && bytes[1] == 'K') {
