@@ -1,20 +1,40 @@
-# DocuMind Backend
+# DocuMind — Backend
 
-Backend Java/Spring Boot cho ứng dụng hỏi đáp trên tài liệu với trích dẫn. Người dùng tải PDF, DOCX hoặc TXT; worker trích xuất và chia đoạn, tạo embedding bằng Gemini, lưu trong PostgreSQL/pgvector. Khi đặt câu hỏi, hệ thống truy xuất các đoạn thuộc tài khoản, gửi ngữ cảnh cho Gemini và truyền kết quả bằng SSE.
+API Java/Spring Boot cho ứng dụng hỏi đáp trên tài liệu. DocuMind xử lý PDF, DOCX và TXT trong nền, tìm đoạn liên quan bằng PostgreSQL/pgvector, rồi dùng Gemini để trả lời kèm trích dẫn. Backend kiểm tra quyền sở hữu tài liệu và hội thoại theo tài khoản.
 
-```text
-React → API Spring Boot → PostgreSQL + pgvector
-                           ↕
-                    worker / Gemini API
+**[Mở bản demo](https://documind-avt.vercel.app)** · **[Kiểm tra backend](https://documind-backend-tsl7.onrender.com/actuator/health/readiness)** · **[Mã nguồn frontend](https://github.com/TuanAnhVu81/documind-frontend)**
+
+Backend demo chạy trên Render Free. Yêu cầu đầu tiên sau khi dịch vụ ngủ có thể chậm hơn. Swagger UI có sẵn khi chạy local với profile `dev`.
+
+## Tính năng và công nghệ
+
+| Thành phần | Cách triển khai |
+| --- | --- |
+| Xác thực | Spring Security, access JWT, refresh cookie `HttpOnly` và kiểm tra Origin/CSRF cho các yêu cầu POST xác thực |
+| Xử lý tài liệu | Hàng đợi PostgreSQL cho worker chạy nền, với PDFBox và Apache POI để trích xuất PDF và DOCX |
+| Hỏi đáp RAG | `gemini-embedding-2` tạo vector 1.536 chiều, pgvector tìm đoạn liên quan và `gemini-3.5-flash-lite` tạo câu trả lời kèm nguồn |
+| Hội thoại | Spring MVC truyền câu trả lời qua Server-Sent Events (SSE). Lịch sử lưu câu trả lời và trích dẫn |
+| Dữ liệu | PostgreSQL, pgvector, Spring Data JPA, JDBC và Flyway |
+| Kiểm thử và đóng gói | Maven Wrapper, JUnit, Testcontainers, JaCoCo, Docker và GitHub Actions |
+
+## Kiến trúc
+
+```mermaid
+flowchart LR
+    FE[React trên Vercel] -->|API và SSE qua rewrite| BE[Spring Boot trên Render]
+    BE -->|Tài khoản, hội thoại, job, vector và tệp| DB[(Neon / PostgreSQL + pgvector)]
+    BE -->|Embedding và sinh câu trả lời| AI[Gemini API]
 ```
 
-Java 21 · Spring Boot · Spring Security · Spring AI · PostgreSQL/pgvector · Flyway · Docker. Hybrid search và rerank mặc định tắt; chưa có báo cáo đánh giá chất lượng đầy đủ để công bố đạt gate phát hành. Xem [trạng thái eval](eval/phase11-status.md).
+API và worker chạy trong cùng tiến trình. Các package chính nằm trong `src/main/java/com/documind/`: `auth` quản lý phiên, `document` quản lý tệp, `ingestion` xử lý nền, `retrieval` truy xuất vector, `chat` điều phối câu trả lời và `usage` tổng hợp mức sử dụng. Profile `dev` lưu bytes tệp trên filesystem local. Profile `prod` lưu bytes tệp trong PostgreSQL, giới hạn mặc định 100 MiB cho tổng bytes tệp.
+
+Hybrid search và rerank mặc định tắt. Bộ eval đã có kết quả đo truy xuất nội bộ trên dữ liệu tổng hợp, còn đánh giá chất lượng RAG đầy đủ đang chờ hoàn tất. Xem [trạng thái eval](eval/phase11-status.md).
 
 ## Chạy local
 
-Cần JDK 21, Docker Desktop và PostgreSQL có pgvector. Các lệnh chạy từ thư mục chứa `pom.xml`.
+Cần JDK 21, Docker Desktop và PostgreSQL có pgvector. Các lệnh PowerShell dưới đây chạy từ thư mục chứa `pom.xml`.
 
-**Dùng PostgreSQL sẵn có:** tạo database và cấu hình `.env` theo `.env.example`. Với container local đã thiết lập trước, có thể dùng `deploy/postgres/setup-local.ps1` và `deploy/setup-auth-local.ps1`; đọc script trước khi chạy, không tạo lại database đang chứa dữ liệu. Sau đó:
+**Dùng PostgreSQL sẵn có.** Tạo database riêng và cấu hình `.env` theo file mẫu. Với container `local_postgres` có pgvector, script tạo database có thể chuẩn bị kết nối cho lần thiết lập đầu tiên. Dùng script xác thực để tạo `JWT_SECRET` cho `.env` local. Với database đã có dữ liệu, giữ cấu hình kết nối hiện tại. [.env.example](.env.example) · [Script tạo database](deploy/postgres/setup-local.ps1) · [Script cấu hình xác thực](deploy/setup-auth-local.ps1)
 
 ```powershell
 docker start local_postgres
@@ -42,7 +62,7 @@ AI, pipeline và worker mặc định tắt. Để thử Gemini với tài liệ
 - `/api/v1/conversations`: hội thoại, lịch sử và gửi câu hỏi qua SSE.
 - `/api/v1/usage`: thống kê theo tài khoản; số chưa ghi nhận được trả về là `null`, không phải 0.
 
-API nghiệp vụ dùng access JWT. Refresh token là cookie HttpOnly; secret JWT phải độc lập và đủ mạnh. Swagger dev không phải cấu hình public production. Image Compose là cấu hình **local**, storage trên volume; không dùng filesystem tạm của Render làm nơi lưu tài liệu lâu dài.
+API nghiệp vụ dùng access JWT. Refresh token nằm trong cookie `HttpOnly`. Xem [Swagger UI local](http://localhost:8080/swagger-ui/index.html) với profile `dev` để thử API.
 
 ## Kiểm thử và đánh giá
 
@@ -54,6 +74,17 @@ python -m unittest discover -s eval -p 'test_*.py'
 ```
 
 Testcontainers cần Docker. Báo cáo JaCoCo nằm tại `target/site/jacoco/index.html`; báo cáo unit/integration ở `target/surefire-reports` và `target/failsafe-reports`. CI không gọi Gemini thật. Hướng dẫn bộ dữ liệu demo và thu/chấm kết quả xem [eval/README.md](eval/README.md); validator thành công không chứng minh chất lượng RAG.
+
+## Triển khai
+
+1. [Backend CI](.github/workflows/ci.yml) kiểm thử JAR, đóng gói image và quét image trước khi lưu artifact theo SHA.
+2. Chạy thủ công [Publish verified backend image](.github/workflows/publish-image.yml) với CI run ID và commit SHA đầy đủ để đưa image lên GHCR.
+3. Trên Render, chọn **Existing Image** và trỏ đến image đã publish. Đặt `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` và `AUTH_ALLOWED_ORIGINS` trong Render Environment. Dùng JDBC URL có TLS cho Neon, giữ mật khẩu ở biến riêng và cấu hình role Flyway nếu tách quyền migration.
+4. Đặt health check `/actuator/health/readiness`. Backend dùng `PORT` do Render cấp nếu `SERVER_PORT` chưa được đặt. Kiểm tra migration, health và luồng đăng nhập, upload, hỏi đáp qua domain Vercel trước khi chia sẻ demo.
+
+Dockerfile đóng gói JAR có sẵn trong `target/`, nên Render cần dùng image GHCR từ CI. URL frontend phải khớp `AUTH_ALLOWED_ORIGINS`, gồm `https://` và bỏ dấu `/` cuối.
+
+Để bật hỏi đáp và xử lý nền trên Render, đặt `GEMINI_API_KEY` rồi bật bốn biến `DOCUMIND_*_ENABLED` đã nêu ở phần chạy local. Kiểm tra quota Gemini trước khi chạy thử bằng tài liệu demo.
 
 ## Xử lý sự cố
 
